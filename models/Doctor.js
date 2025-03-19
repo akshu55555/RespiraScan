@@ -2,7 +2,7 @@ import { Sequelize } from "sequelize";
 import { DataTypes } from "sequelize";
 
 export const doctor=(sequelize)=>{
-        return sequelize.define('Doctor',{
+        return sequelize.define('doctor',{
 
             NMC_id:{
 
@@ -24,9 +24,10 @@ export const doctor=(sequelize)=>{
                 type:DataTypes.STRING,
                 
             },
-            locationbar:{
+            
+            password:{
                 type:DataTypes.STRING,
-             },
+            },
      })
 }
 export default doctor;
