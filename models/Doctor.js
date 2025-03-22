@@ -1,8 +1,7 @@
-import { Sequelize } from "sequelize";
 import { DataTypes } from "sequelize";
 
-export const doctor=(sequelize)=>{
-        return sequelize.define('doctor',{
+const doctor=(sequelize)=>{
+        return sequelize.define('doctors',{
 
             NMC_id:{
 
@@ -27,7 +26,10 @@ export const doctor=(sequelize)=>{
             
             password:{
                 type:DataTypes.STRING,
+                allowNull:false
             },
-     })
+     } ,{ 
+        timestamps: true  // ✅ Ensure this line is present
+      })
 }
 export default doctor;
