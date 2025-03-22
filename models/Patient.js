@@ -1,7 +1,6 @@
-import { Sequelize } from "sequelize";
-import {DataTypes} from {Sequelize};
+import { DataTypes } from "sequelize";
 
-export const patient=(sequelize)=>{
+const patient=(sequelize)=>{
         return sequelize.define('patient',{
 
             id:{
@@ -12,12 +11,12 @@ export const patient=(sequelize)=>{
             },
             name:{
                 type:DataTypes.STRING,
-                allowNull:false,
+                
 
             },
             email:{
                 type:DataTypes.STRING,
-                allowNull:false,
+                
 
             },
             sex:{
@@ -25,7 +24,7 @@ export const patient=(sequelize)=>{
                 
             },
             
-            password:{
+            pass:{
                 type:DataTypes.STRING,
             },
             age:{
@@ -35,14 +34,16 @@ export const patient=(sequelize)=>{
                 type:DataTypes.STRING,
             },
             weight:{
-                type:DataTypes.FLOAT,
+                type:DataTypes.INTEGER,
             },
             height:{
-                type:DataTypes.FLOAT,
+                type:DataTypes.INTEGER,
             },
             
 
-     })
+     },{ 
+        timestamps: true  // ✅ Ensure this line is present
+      })
 }
 
 export default patient;
