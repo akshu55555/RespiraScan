@@ -28,6 +28,9 @@ const doctor=(sequelize)=>{
                 type:DataTypes.STRING,
                 allowNull:false
             },
+            patients:{
+                type:DataTypes.ARRAY(DataTypes.INTEGER),
+            }
      } ,{ 
         timestamps: true  // ✅ Ensure this line is present
       })

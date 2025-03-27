@@ -39,6 +39,9 @@ const patient=(sequelize)=>{
             height:{
                 type:DataTypes.INTEGER,
             },
+            doc_id:{
+                type:DataTypes.INTEGER
+            }
             
 
      },{ 
