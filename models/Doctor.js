@@ -30,6 +30,8 @@ const doctor=(sequelize)=>{
             },
             patients:{
                 type:DataTypes.ARRAY(DataTypes.INTEGER),
+                allowNull: false,
+                defaultValue: [] 
             }
      } ,{ 
         timestamps: true  // ✅ Ensure this line is present

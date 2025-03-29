@@ -9,9 +9,9 @@ const signup2=async(req,res)=>{
         return res.status(402).json({message:"password mandatory!"});
     }
 
-    const sign=await PatientModel.create({          //creating table patients
-        attributes:[name,email,phone,pass,age,sex,bg,weight,height,doc_id],
-    })
+    const sign = await PatientModel.create({            //creating table patients
+        name, email, phone, pass, age, sex, bg, weight, height, doc_id
+    });
     console.log(req.body.name);
     const patient=await PatientModel.findOne({      //retrieving that patient id and doctor id
         attributes:["id","doc_id"],
@@ -31,18 +31,25 @@ const signup2=async(req,res)=>{
             NMC_id:doctor_id,
         }
         })
+        if (!doc) {
+            console.log("Doctor not found! NMC_id:", doctor_id);
+            return res.status(404).json({ message: "Doctor ID does not exist!" });
+        }
+        
+        console.log("NMC_id",doc.NMC_id);
         console.log("created doc!");
-        let list_of_patients=doc.patients;   //i am taking patient_id array from doctor model
+        let list_of_patients = Array.isArray(doc.patients) ? doc.patients : [];   //i am taking patient_id array from doctor model
         list_of_patients.push(patient.id);   //i am pushing the patient id array in list of patients
+        console.log("list",list_of_patients);
 
-    const final_doctor=await DoctorModel.update({
-        patients:list_of_patients
-    },
-    {where:{
-        NMC_id:doctor_id,
-    }}
 
-)}catch(err){
+        const [updatedCount] = await DoctorModel.update(
+            { patients: list_of_patients },
+            { where: { NMC_id: doctor_id } }
+        );
+        
+console.log("doctor table updated")
+}catch(err){
         return res.status(401).json("the doctor id does not exist!")
     }
     

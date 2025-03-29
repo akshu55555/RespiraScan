@@ -3,21 +3,22 @@ import jwt from 'jsonwebtoken';
 
 const loginpatient=async(req,res)=>{
 
-    const{email,password}=req.body;
+    const{email,pass}=req.body;
 
     const patient=await PatientModel.findOne({
-            attributes:["email","password"],
+            attributes:["email","pass"],
             where:{
                 email:req.body.email,
             }
     })
-    if(password!=patient.password){
+    
+    if(pass!=patient.pass){
         return res.status(402).json("password is incorrect");
     }
     let token;
     try{
 
-        token=jwt.sign({email:patient.email, password:patient.password},
+        token=jwt.sign({email:patient.email, password:patient.pass},
             "your_secret_key",
             {expiresIn:"1hr"}
         )

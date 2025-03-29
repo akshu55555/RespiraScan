@@ -16,6 +16,7 @@ const signup=async(req,res)=>{
             NMC_id,name,email,contact,password
           
         })
+        console.log(sign.patients);
         return res.status(202).json("doctor table updated!");
         
 }         
