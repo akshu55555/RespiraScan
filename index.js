@@ -11,6 +11,7 @@ import signup from "./controllers/signupcontrollerd.js";
 import signup2 from "./controllers/signupcontrollerp.js";
 import logindoc from "./controllers/logincontrollerd.js";
 import loginpatient from './controllers/logincontrollerp.js';
+import upload from './controllers/uploadcontroller.js';
 
 
 // Middleware
@@ -45,3 +46,4 @@ app.post("/logout", (req, res) => {
 });
 app.use('/logindoc',logindoc);
 app.use('/loginpatient',loginpatient);
+app.use('/upload',upload);
