@@ -1,78 +1,172 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const PatientSignup = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate(); // Step 1: Initialize navigate for redirection
+
+  const handleSubmit = (event) => {
+    event.preventDefault(); // Step 2: Prevent default form submission
+    // Here, you would usually send the form data to the backend for account creation
+    navigate("/patient-login"); // Step 3: Redirect user to login page after signup
+  };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-white to-[#09D8B6]">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-        <h2 className="text-2xl font-bold text-center mb-6">Patient Sign Up</h2>
-        
-        <form>
-          <h3 className="font-semibold mb-2">Personal Info</h3>
+    <div className="container mx-auto px-4 max-w-lg py-12">
+      <div className="bg-white rounded-lg shadow-lg p-8">
+        <form onSubmit={handleSubmit}> {/* Step 4: Attach handleSubmit to form */}
+          <h3 className="text-lg font-semibold text-center mb-2">Personal Info</h3>
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <input type="text" placeholder="First Name" className="w-full px-3 py-2 border border-gray-300 rounded-md" required />
-            <input type="text" placeholder="Last Name" className="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+            <div>
+              <label className="block text-gray-700 mb-1" htmlFor="firstName">
+                First Name
+              </label>
+              <input
+                type="text"
+                id="firstName"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1" htmlFor="lastName">
+                Last Name
+              </label>
+              <input
+                type="text"
+                id="lastName"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1" htmlFor="age">
+                Age
+              </label>
+              <input
+                type="number"
+                id="age"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1" htmlFor="gender">
+                Gender
+              </label>
+              <select
+                id="gender"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+                required
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
           </div>
-          <div className="mb-4">
-            <input type="number" placeholder="Age" className="w-full px-3 py-2 border border-gray-300 rounded-md" required />
-          </div>
-          <div className="mb-4">
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-              <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          
-          <h3 className="font-semibold mb-2">Medical History</h3>
+
+          <h3 className="text-lg font-semibold text-center mb-2">History</h3>
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <input type="text" placeholder="Height (cm)" className="w-full px-3 py-2 border border-gray-300 rounded-md" required />
-            <input type="text" placeholder="Weight (kg)" className="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+            <div>
+              <label className="block text-gray-700 mb-1" htmlFor="height">
+                Height (cm)
+              </label>
+              <input
+                type="number"
+                id="height"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1" htmlFor="weight">
+                Weight (kg)
+              </label>
+              <input
+                type="number"
+                id="weight"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+                required
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-gray-700 mb-1" htmlFor="bloodGroup">
+                Blood Group
+              </label>
+              <select
+                id="bloodGroup"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+                required
+              >
+                <option value="">Select Blood Group</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
           </div>
+
+          <h3 className="text-lg font-semibold text-center mb-2">Login Details</h3>
           <div className="mb-4">
-            <select className="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-              <option value="">Select Blood Group</option>
-              <option value="A+">A+</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B-">B-</option>
-              <option value="O+">O+</option>
-              <option value="O-">O-</option>
-              <option value="AB+">AB+</option>
-              <option value="AB-">AB-</option>
-            </select>
-          </div>
-          
-          <h3 className="font-semibold mb-2">Login Details</h3>
-          <div className="mb-4">
-            <input type="email" placeholder="Email ID" className="w-full px-3 py-2 border border-gray-300 rounded-md" required />
-          </div>
-          <div className="mb-4">
-            <input 
-              type={showPassword ? "text" : "password"} 
-              placeholder="Password" 
-              className="w-full px-3 py-2 border border-gray-300 rounded-md" required
+            <label className="block text-gray-700 mb-1" htmlFor="email">
+              Email Id
+            </label>
+            <input
+              type="email"
+              id="email"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+              required
             />
           </div>
-          <div className="mb-4 flex items-center">
-            <input type="checkbox" id="showPassword" className="mr-2" onChange={() => setShowPassword(!showPassword)} />
-            <label htmlFor="showPassword" className="text-gray-700">Show Password</label>
+
+          <div className="mb-2">
+            <label className="block text-gray-700 mb-1" htmlFor="password">
+              Password
+            </label>
+            <input
+              type={showPassword ? "text" : "password"}
+              id="password"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+              required
+            />
           </div>
-          
-          <button type="submit" className="w-full bg-[#09D8B6] text-white py-2 px-4 rounded-md hover:bg-[#08c6a6]">
+
+          <div className="mb-6 flex items-center">
+            <input
+              type="checkbox"
+              id="showPassword"
+              className="mr-2"
+              onChange={() => setShowPassword(!showPassword)}
+            />
+            <label htmlFor="showPassword" className="text-gray-700">
+              Show Password
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-[#09D8B6] text-white py-2 px-4 rounded-md hover:bg-[#08c6a6] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#09D8B6]"
+          >
             Create an Account
           </button>
         </form>
-        
+
         <p className="mt-4 text-center">
-          Already have an account? <Link to="/patient-login" className="text-[#09D8B6] hover:underline">Login</Link>
+          Already have an Account?{" "}
+          <Link to="/patient-login" className="text-[#09D8B6] hover:underline">
+            Login
+          </Link>
         </p>
       </div>
     </div>
   );
-}
+};
 
 export default PatientSignup;

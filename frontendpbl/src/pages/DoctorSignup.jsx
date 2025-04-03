@@ -1,15 +1,22 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const DoctorSignup = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate(); // Step 1: Initialize navigate for redirection
+
+  const handleSubmit = (event) => {
+    event.preventDefault(); // Step 2: Prevent default form submission
+    // Here, you would usually send the form data to the backend for account creation
+    navigate("/doctor-login"); // Step 3: Redirect user to login page after signup
+  };
 
   return (
     <div className="container mx-auto px-4 max-w-md py-12">
       <div className="bg-white rounded-lg shadow-lg p-8">
         <h2 className="text-xl font-semibold text-center mb-4">Personal Info</h2>
 
-        <form>
+        <form onSubmit={handleSubmit}> {/* Step 4: Attach handleSubmit to form */}
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-gray-700 mb-1" htmlFor="firstName">

@@ -6,23 +6,37 @@ const Header = () => {
   const [showLoginDropdown, setShowLoginDropdown] = useState(false)
   const [showSignupDropdown, setShowSignupDropdown] = useState(false)
 
+  // Function to handle smooth scrolling
+  const scrollToSection = (id) => {
+    const section = document.getElementById(id);
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <header className="bg-transparent p-4">
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo and RespiraScan Text */}
-        <Link to="./Home.jsx" className="flex items-center space-x-2">
+        <Link to="/" className="flex items-center space-x-2">
           <img src={logo} alt="RespiraScan Logo" className="h-10 w-10 rounded-full object-cover" />
           <span className="text-[#09D8B6] font-bold text-xl">RespiraScan</span>
         </Link>
 
         {/* Navigation Links */}
         <nav className="flex items-center space-x-6">
-          <Link to="/" className="text-gray-700 hover:text-[#09D8B6]">
+          <button 
+            className="text-gray-700 hover:text-[#09D8B6]" 
+            onClick={(e) => { e.preventDefault(); scrollToSection("features"); }}
+          >
             Features
-          </Link>
-          <Link to="/about-developers" className="text-gray-700 hover:text-[#09D8B6]">
+          </button>
+          <button 
+            className="text-gray-700 hover:text-[#09D8B6]" 
+            onClick={(e) => { e.preventDefault(); scrollToSection("about-developers"); }}
+          >
             About Developers
-          </Link>
+          </button>
 
           {/* Sign Up Dropdown */}
           <div className="relative">
@@ -85,4 +99,4 @@ const Header = () => {
   )
 }
 
-export default Header
+export default Header;
