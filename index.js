@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 const app=express();
@@ -11,7 +10,8 @@ import signup from "./controllers/signupcontrollerd.js";
 import signup2 from "./controllers/signupcontrollerp.js";
 import logindoc from "./controllers/logincontrollerd.js";
 import loginpatient from './controllers/logincontrollerp.js';
-import upload from './controllers/uploadcontroller.js';
+
+import predict from './controllers/uploadcontroller.js';
 
 
 // Middleware
@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 const PORT=5003;
 dotenv.config(); 
 
-  
+
 console.log(process.env.DB_USER);
 sequelize
   .authenticate()
@@ -46,4 +46,5 @@ app.post("/logout", (req, res) => {
 });
 app.use('/logindoc',logindoc);
 app.use('/loginpatient',loginpatient);
-app.use('/upload',upload);
+
+app.use('/predict', predict);
