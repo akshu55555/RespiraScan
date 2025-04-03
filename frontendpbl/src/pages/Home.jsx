@@ -30,7 +30,8 @@ const Home = () => {
         <p className="text-2xl font-semibold">Scan, Detect Breathe Easier.</p>
       </div>
 
-      <section className="my-16">
+      {/* Features Section with ID */}
+      <section id="features" className="my-16">
         <h2 className="text-2xl font-bold text-center mb-10">Features</h2>
         <div className="max-w-4xl mx-auto space-y-8">
           {scrollIndex >= 0 && (
@@ -62,7 +63,8 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="my-16">
+      {/* About Developers Section with ID */}
+      <section id="about-developers" className="my-16">
         <h2 className="text-3xl font-bold text-center mb-10">About Developers</h2>
         <div className="flex flex-wrap justify-center gap-24">
           {[1, 2, 3, 4].map((item) => (
