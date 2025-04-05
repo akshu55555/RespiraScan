@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import DoctorLoginImage from '../assets/Doctor_Login.png';
+import DoctorLoginImage from '../assets/Doctor_Login.jpg';
 
 const DoctorLogin = () => {
   return (
