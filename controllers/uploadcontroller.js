@@ -1,67 +1,67 @@
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { spawn } from 'child_process';
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { spawn } from "child_process";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 
 // Configure Multer Storage
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Save files in "uploads" folder
-  },
+  destination: "uploads/", // Save files in "uploads" folder
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname)); // Unique file name
   }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 // Prediction Handler
 const predict = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-
-    const imagePath = path.resolve(req.file.path); // Full path of uploaded file
-    console.log(`Processing file: ${imagePath}`);
-
-    // Spawn Python child process
-    const pythonProcess = spawn("python", ["predict.py", imagePath]);
-
-    let resultData = "";
-
-    // Capture output
-    pythonProcess.stdout.on("data", (data) => {
-      resultData += data.toString();
-    });
-
-    // Capture errors
-    pythonProcess.stderr.on("data", (data) => {
-      console.error(`Error from Python: ${data}`);
-    });
-
-    // On process exit, return response
-    pythonProcess.on("close", (code) => {
-      if (code === 0) {
-        try {
-          const prediction = JSON.parse(resultData);
-          res.json(prediction);
-        } catch (error) {
-          res.status(500).json({ error: "Invalid JSON response from predict.py" });
-        }
-      } else {
-        res.status(500).json({ error: "Prediction failed" });
-      }
-
-      // Cleanup: Remove uploaded image
-//       fs.unlink(imagePath, (err) => {
-//         if (err) console.error("Failed to delete temp file:", err);
-//       });
-    });
-  } catch (error) {
-    return res.status(500).json({ error: "Something went wrong!" });
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
   }
+
+  const imagePath = path.resolve(req.file.path); // Full path of uploaded file
+  console.log(`Processing file: ${imagePath}`);
+
+  // Run Python script
+  const pythonProcess = spawn('python', [path.join(__dirname, 'model.py'), imagePath]);
+
+
+  let resultData = "";
+  
+  pythonProcess.stdout.on("data", (data) => {
+    resultData += data.toString();
+  });
+
+  pythonProcess.stderr.on("data", (data) => {
+    console.error(`Error from Python: ${data}`);
+  });
+
+  pythonProcess.on("close", (code) => {
+    console.log(`Python process exited with code: ${code}`);
+    console.log(`Raw Python output: ${resultData}`);
+    
+    if (code === 0) {
+      try {
+        // Extract the last line of the output which should contain the JSON
+        const lines = resultData.trim().split('\n');
+        const lastLine = lines[lines.length - 1];
+        const parsedData = JSON.parse(lastLine);
+        res.json(parsedData);
+      } catch (error) {
+        console.error(`JSON parsing error: ${error.message}`);
+        res.status(500).json({ error: "Invalid response from predict.py", details: resultData });
+      }
+    } else {
+      res.status(500).json({ error: "Prediction failed", code });
+    }
+  });
 };
 
-// Export as Middleware for `index.js`
+// Export Middleware
 export default [upload.single("file"), predict];

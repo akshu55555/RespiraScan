@@ -10,9 +10,8 @@ import signup from "./controllers/signupcontrollerd.js";
 import signup2 from "./controllers/signupcontrollerp.js";
 import logindoc from "./controllers/logincontrollerd.js";
 import loginpatient from './controllers/logincontrollerp.js';
-
-import predict from './controllers/uploadcontroller.js';
-
+import uploadMiddleware from './controllers/uploadcontroller.js';
+import multer from 'multer';
 
 // Middleware
 app.use(cookieParser());
@@ -46,5 +45,6 @@ app.post("/logout", (req, res) => {
 });
 app.use('/logindoc',logindoc);
 app.use('/loginpatient',loginpatient);
+const upload = multer({ dest: 'uploads/' });
 
-app.use('/predict', predict);
+app.post('/upload', uploadMiddleware);
