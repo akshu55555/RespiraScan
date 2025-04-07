@@ -1,6 +1,6 @@
 import multer from "multer";
 import path from "path";
-
+import { PatientModel } from "../db.js";
 // Configure Multer Storage
 const storage = multer.diskStorage({
   destination: "uploads/", // Save files in "uploads" folder
