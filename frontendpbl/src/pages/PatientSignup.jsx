@@ -3,42 +3,32 @@ import { Link, useNavigate } from "react-router-dom";
 
 const PatientSignup = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate(); // Step 1: Initialize navigate for redirection
+  const navigate = useNavigate();
 
   const handleSubmit = (event) => {
-    event.preventDefault(); // Step 2: Prevent default form submission
-    // Here, you would usually send the form data to the backend for account creation
-    navigate("/patient-login"); // Step 3: Redirect user to login page after signup
+    event.preventDefault();
+    // Submit logic goes here
+    navigate("/patient-login");
   };
 
   return (
     <div className="container mx-auto px-4 max-w-lg py-12">
       <div className="bg-white rounded-lg shadow-lg p-8">
-        <form onSubmit={handleSubmit}> {/* Step 4: Attach handleSubmit to form */}
+        <form onSubmit={handleSubmit}>
           <h3 className="text-lg font-semibold text-center mb-2">Personal Info</h3>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-1" htmlFor="name">
+              Full Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+              required
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-gray-700 mb-1" htmlFor="firstName">
-                First Name
-              </label>
-              <input
-                type="text"
-                id="firstName"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-1" htmlFor="lastName">
-                Last Name
-              </label>
-              <input
-                type="text"
-                id="lastName"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
-                required
-              />
-            </div>
             <div>
               <label className="block text-gray-700 mb-1" htmlFor="age">
                 Age
