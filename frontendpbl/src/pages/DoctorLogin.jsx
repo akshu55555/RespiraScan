@@ -1,7 +1,25 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import DoctorLoginImage from '../assets/Doctor_Login.jpg';
 
 const DoctorLogin = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // TODO: Replace this dummy logic with actual API call
+    if (email && password) {
+      // You can send email/password to backend here and check response
+      // If successful:
+      navigate('/doctor-dashboard');
+    } else {
+      alert('Please enter valid email and password');
+    }
+  };
+
   return (
     <div className="flex h-screen">
       {/* Left Side - Image covering full half */}
@@ -16,7 +34,7 @@ const DoctorLogin = () => {
       {/* Right Side - Login Form with Gradient Background */}
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center bg-gradient-to-b from-white to-[#09D8B6] p-12">
         <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">Doctor Login</h2>
-        <form className="w-full max-w-sm">
+        <form onSubmit={handleSubmit} className="w-full max-w-sm">
           <div className="mb-4">
             <label className="block text-gray-700 mb-2" htmlFor="email">
               Email ID
@@ -24,6 +42,8 @@ const DoctorLogin = () => {
             <input
               type="email"
               id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
               required
             />
@@ -36,6 +56,8 @@ const DoctorLogin = () => {
             <input
               type="password"
               id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
               required
             />
