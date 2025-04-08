@@ -24,6 +24,11 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json({ strict: false }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin:"*",
+  methods: "GET,POST,PUT,DELETE",
+  credentials:true,
+}));
 
 // Ensure directories exist
 if (!fs.existsSync('uploads')) {
@@ -182,15 +187,16 @@ app.post('/report', upload.single('image'), async (req, res) => {
         doc.text(`Prediction is model based and thus can be innacurate`);
         doc.end();
 
-        try{
+        try {
           await ReportModel.create({
             patient_id: patient.id,
             reportPath: pdfPath,
             diagnosis: result.label,
-            
           });
-        }catch(err){
-          console.log("error bawlat!!")
+          console.log("Report created successfully");
+        } catch(err) {
+          console.error("Error creating report:", err.message);
+          console.error(err.stack);  // This will show the full error stack trace
         }
         
         writeStream.on('finish', () => {
