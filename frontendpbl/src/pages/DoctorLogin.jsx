@@ -10,10 +10,15 @@ const DoctorLogin = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // TODO: Replace this dummy logic with actual API call
+    // TODO: Replace with real API call
     if (email && password) {
-      // You can send email/password to backend here and check response
-      // If successful:
+      // Simulate API response
+      const dummyNmcId = 'NMC12345'; // Replace this with actual value from backend later
+
+      // Save the NMC ID to localStorage
+      localStorage.setItem('doctorId', dummyNmcId);
+
+      // Redirect to dashboard
       navigate('/doctor-dashboard');
     } else {
       alert('Please enter valid email and password');
@@ -22,7 +27,7 @@ const DoctorLogin = () => {
 
   return (
     <div className="flex h-screen">
-      {/* Left Side - Image covering full half */}
+      {/* Left Side - Image */}
       <div className="w-1/2 hidden md:block">
         <img 
           src={DoctorLoginImage} 
@@ -31,7 +36,7 @@ const DoctorLogin = () => {
         />
       </div>
 
-      {/* Right Side - Login Form with Gradient Background */}
+      {/* Right Side - Form */}
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center bg-gradient-to-b from-white to-[#09D8B6] p-12">
         <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">Doctor Login</h2>
         <form onSubmit={handleSubmit} className="w-full max-w-sm">
@@ -48,7 +53,7 @@ const DoctorLogin = () => {
               required
             />
           </div>
-          
+
           <div className="mb-6">
             <label className="block text-gray-700 mb-2" htmlFor="password">
               Password
@@ -62,7 +67,7 @@ const DoctorLogin = () => {
               required
             />
           </div>
-          
+
           <button
             type="submit"
             className="w-full bg-[#0A66C2] text-white py-2 px-4 rounded-md hover:bg-[#084B9E] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0A66C2]"
@@ -70,7 +75,7 @@ const DoctorLogin = () => {
             Submit
           </button>
         </form>
-        
+
         <p className="mt-4 text-center text-gray-800">
           Don't have an account?{' '}
           <Link to="/doctor-signup" className="text-[#0A66C2] font-semibold hover:underline">
