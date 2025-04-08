@@ -5,6 +5,7 @@ import DoctorLogin from './pages/DoctorLogin'
 import PatientLogin from './pages/PatientLogin'
 import DoctorSignup from './pages/DoctorSignup.jsx'
 import PatientSignup from './pages/PatientSignup'
+import DoctorDashboard from './pages/DoctorDashboard' // ✅ Add this
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/patient-login" element={<PatientLogin />} />
         <Route path="/doctor-signup" element={<DoctorSignup />} />
         <Route path="/patient-signup" element={<PatientSignup />} />
+        <Route path="/doctor-dashboard" element={<DoctorDashboard />} /> {/* ✅ New Route */}
       </Routes>
     </div>
   )
