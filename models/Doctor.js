@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 
 const doctor=(sequelize)=>{
-        return sequelize.define('doctors',{
+        return sequelize.define('doctor',{
 
             NMC_id:{
 
