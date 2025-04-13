@@ -51,8 +51,13 @@ const DoctorDashboard = () => {
     formData.append('disease', selectedDisease);
 
     try {
-      await axios.post('http://localhost:5000/api/upload-xray', formData);
+      await axios.post('http://localhost:5000/upload', formData);
       setImageUploaded(true);
+      if (response.data && response.data.label) {
+        setReport(`Diagnosis: ${response.data.label} (Confidence: ${(response.data.confidence * 100).toFixed(2)}%)`);
+      }
+      
+      
       alert("Image uploaded successfully. You can now check the report.");
     } catch (err) {
       console.error('Upload failed', err);

@@ -3,12 +3,65 @@ import { Link, useNavigate } from "react-router-dom";
 
 const PatientSignup = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [sex, setSex] = useState("");
+  const [height, setHeight] = useState("");
+  const [weight, setWeight] = useState("");
+  const [bg, setBg] = useState("");
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [doc_id, setDocId] = useState(""); // You'll need a way to get the doctor's ID
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // Submit logic goes here
-    navigate("/patient-login");
+    setError(""); // Clear previous errors
+
+    const patientData = {
+      name,
+      email,
+      phone: "", // You might want to add a phone number field in your UI
+      pass,
+      age,
+      sex,
+      bg,
+      weight,
+      height,
+      doc_id,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/signuppatient", { // Assuming your backend runs on port 8000
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(patientData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Signup successful:", data);
+        navigate("/patient-login"); // Redirect to login on successful signup
+      } else if (response.status === 402) {
+        const errorData = await response.json();
+        setError(errorData.message || "Password is mandatory!");
+      } else if (response.status === 404) {
+        const errorData = await response.json();
+        setError(errorData.message || "Doctor ID does not exist!");
+      } else if (response.status === 401) {
+        const errorData = await response.json();
+        setError(errorData || "The doctor id does not exist!");
+      } else {
+        setError("Signup failed. Please try again.");
+        console.error("Signup failed:", response.status);
+      }
+    } catch (error) {
+      setError("An error occurred during signup.");
+      console.error("Signup error:", error);
+    }
   };
 
   return (
@@ -25,6 +78,8 @@ const PatientSignup = () => {
               id="name"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
               required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
@@ -38,6 +93,8 @@ const PatientSignup = () => {
                 id="age"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
                 required
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
               />
             </div>
             <div>
@@ -48,6 +105,8 @@ const PatientSignup = () => {
                 id="gender"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
                 required
+                value={sex}
+                onChange={(e) => setSex(e.target.value)}
               >
                 <option value="">Select Gender</option>
                 <option value="male">Male</option>
@@ -68,6 +127,8 @@ const PatientSignup = () => {
                 id="height"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
                 required
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
               />
             </div>
             <div>
@@ -79,6 +140,8 @@ const PatientSignup = () => {
                 id="weight"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
                 required
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
               />
             </div>
             <div className="col-span-2">
@@ -89,6 +152,8 @@ const PatientSignup = () => {
                 id="bloodGroup"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
                 required
+                value={bg}
+                onChange={(e) => setBg(e.target.value)}
               >
                 <option value="">Select Blood Group</option>
                 <option value="A+">A+</option>
@@ -113,6 +178,8 @@ const PatientSignup = () => {
               id="email"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
@@ -125,6 +192,23 @@ const PatientSignup = () => {
               id="password"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
               required
+              value={pass}
+              onChange={(e) => setPass(e.target.value)}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-1" htmlFor="doc_id">
+              Doctor ID
+            </label>
+            <input
+              type="text"
+              id="doc_id"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+              required
+              value={doc_id}
+              onChange={(e) => setDocId(e.target.value)}
+              placeholder="Enter your Doctor's NMC ID"
             />
           </div>
 
@@ -139,6 +223,8 @@ const PatientSignup = () => {
               Show Password
             </label>
           </div>
+
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
           <button
             type="submit"

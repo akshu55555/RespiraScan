@@ -5,23 +5,40 @@ import DoctorLoginImage from '../assets/Doctor_Login.jpg';
 const DoctorLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(''); // Clear any previous errors
 
-    // TODO: Replace with real API call
-    if (email && password) {
-      // Simulate API response
-      const dummyNmcId = 'NMC12345'; // Replace this with actual value from backend later
+    try {
+      const response = await fetch('http://localhost:5000/logindoc', { // Assuming your backend runs on port 8000
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // Save the NMC ID to localStorage
-      localStorage.setItem('doctorId', dummyNmcId);
-
-      // Redirect to dashboard
-      navigate('/doctor-dashboard');
-    } else {
-      alert('Please enter valid email and password');
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Login successful:", data);
+        // Assuming the backend sets the token as a cookie
+        navigate('/doctor-dashboard'); // Redirect to dashboard on successful login
+      } else if (response.status === 402) {
+        const errorMessage = await response.json();
+        setError(errorMessage); // Display the error message from the backend
+        // Do not navigate if the status is 402 (error)
+      } else {
+        setError('Login failed. Please check your credentials.');
+        console.error('Login failed:', response.status);
+        // Do not navigate for other error statuses as well
+      }
+    } catch (error) {
+      setError('An error occurred during login.');
+      console.error('Login error:', error);
+      // Do not navigate if there's a network error
     }
   };
 
@@ -29,10 +46,10 @@ const DoctorLogin = () => {
     <div className="flex h-screen">
       {/* Left Side - Image */}
       <div className="w-1/2 hidden md:block">
-        <img 
-          src={DoctorLoginImage} 
-          alt="Login Illustration" 
-          className="w-full h-full object-cover" 
+        <img
+          src={DoctorLoginImage}
+          alt="Login Illustration"
+          className="w-full h-full object-cover"
         />
       </div>
 
@@ -68,11 +85,13 @@ const DoctorLogin = () => {
             />
           </div>
 
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
           <button
-            type="submit"
+            type="login"
             className="w-full bg-[#0A66C2] text-white py-2 px-4 rounded-md hover:bg-[#084B9E] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0A66C2]"
           >
-            Submit
+            Login
           </button>
         </form>
 
