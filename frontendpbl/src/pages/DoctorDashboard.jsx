@@ -1,30 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Oval } from 'react-loader-spinner'; // Import a spinner component
 
 const DoctorDashboard = () => {
   const [patients, setPatients] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showPopup, setShowPopup] = useState(false);
-  const [selectedPatientId, setSelectedPatientId] = useState('');
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
   const [selectedDisease, setSelectedDisease] = useState('');
   const [image, setImage] = useState(null);
   const [report, setReport] = useState('');
   const [imageUploaded, setImageUploaded] = useState(false);
+  const [result, setResult] = useState(null);
+  const [doctorNmcId, setDoctorNmcId] = useState('');
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [isUploading, setIsUploading] = useState(false); // New state for upload loading
 
   useEffect(() => {
     const dummyPatients = [
-      { _id: 'P001', name: 'Aarav Mehta', email: 'aarav@example.com' },
-      { _id: 'P002', name: 'Priya Sharma', email: 'priya@example.com' },
-      { _id: 'P003', name: 'Kabir Singh', email: 'kabir@example.com' },
-      { _id: 'P004', name: 'Sneha Reddy', email: 'sneha@example.com' },
-      { _id: 'P005', name: 'Rohan Patel', email: 'rohan@example.com' },
-      { _id: 'P006', name: 'Ishita Das', email: 'ishita@example.com' },
-      { _id: 'P007', name: 'Yash Joshi', email: 'yash@example.com' },
-      { _id: 'P008', name: 'Meera Nair', email: 'meera@example.com' },
-      { _id: 'P009', name: 'Dev Gupta', email: 'dev@example.com' },
-      { _id: 'P010', name: 'Ananya Rao', email: 'ananya@example.com' },
+      { _id: 13, name: 'Aarav Mehta', email: 'aarav@example.com' },
+      { _id: 14, name: 'Priya Sharma', email: 'priya@example.com' },
+      { _id: 16, name: 'Kabir Singh', email: 'kabir@example.com' },
+      { _id: 17, name: 'Sneha Reddy', email: 'sneha@example.com' },
+      { _id: 18, name: 'Rohan Patel', email: 'rohan@example.com' },
+      { _id: 19, name: 'Ishita Das', email: 'ishita@example.com' },
+      { _id: 20, name: 'Yash Joshi', email: 'yash@example.com' },
+      { _id: 21, name: 'Meera Nair', email: 'meera@example.com' },
+      { _id: 22, name: 'Dev Gupta', email: 'dev@example.com' },
+      { _id: 23, name: 'Ananya Rao', email: 'ananya@example.com' },
     ];
     setPatients(dummyPatients);
+
+    const storedNmcId = localStorage.getItem('doctorNmcId');
+    if (storedNmcId) {
+      setDoctorNmcId(storedNmcId);
+    } else {
+      console.warn('Doctor NMC ID not found in local storage.');
+    }
   }, []);
 
   const filteredPatients = patients.filter((patient) =>
@@ -38,6 +50,8 @@ const DoctorDashboard = () => {
     setReport('');
     setImageUploaded(false);
     setSelectedDisease('');
+    setResult(null);
+    setIsUploading(false); // Reset uploading state when popup opens
   };
 
   const handleImageUpload = async () => {
@@ -45,33 +59,66 @@ const DoctorDashboard = () => {
       return alert("Please select patient, disease, and image");
     }
 
+    setIsUploading(true); // Set uploading to true
+
     const formData = new FormData();
     formData.append('image', image);
     formData.append('patientId', selectedPatientId);
     formData.append('disease', selectedDisease);
 
     try {
-      await axios.post('http://localhost:5000/upload', formData);
+      const response = await axios.post('http://localhost:5000/upload', formData);
       setImageUploaded(true);
       if (response.data && response.data.label) {
+        setResult(response.data);
         setReport(`Diagnosis: ${response.data.label} (Confidence: ${(response.data.confidence * 100).toFixed(2)}%)`);
       }
-      
-      
       alert("Image uploaded successfully. You can now check the report.");
     } catch (err) {
       console.error('Upload failed', err);
       alert("Image upload failed.");
+    } finally {
+      setIsUploading(false); // Set uploading to false
     }
   };
 
   const handleReportSubmit = async () => {
+    if (!result || selectedPatientId === null || !doctorNmcId || isGeneratingReport) {
+      return;
+    }
+
+    setIsGeneratingReport(true);
+
+    if (!doctorNmcId) {
+      console.error("Doctor NMC ID is undefined. Report generation cannot proceed.");
+      alert("Error: Doctor NMC ID is missing.");
+      setIsGeneratingReport(false);
+      return;
+    }
+
     try {
-      const response = await axios.get(`http://localhost:5000/api/generate-report/${selectedPatientId}?disease=${selectedDisease}`);
-      setReport(response.data.report);
+      const requestBody = {
+        id: selectedPatientId,
+        NMC_id: doctorNmcId,
+      };
+
+      const response = await axios.post('http://localhost:5000/report', requestBody, {
+        responseType: 'blob',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      window.open(pdfUrl, '_blank');
+      setShowPopup(false);
     } catch (err) {
       console.error('Report generation failed', err);
       alert("Report generation failed.");
+    } finally {
+      setIsGeneratingReport(false);
     }
   };
 
@@ -111,23 +158,30 @@ const DoctorDashboard = () => {
         ))}
       </div>
 
-      {/* Upload Modal */}
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] md:w-1/2">
             <h2 className="text-xl font-bold mb-4">Upload X-ray Report</h2>
-
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-1">Patient ID</label>
               <input
                 type="text"
-                value={selectedPatientId}
-                onChange={(e) => setSelectedPatientId(e.target.value)}
+                value={selectedPatientId === null ? '' : selectedPatientId}
                 className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
-                placeholder="Enter Patient ID"
+                placeholder="Patient ID"
+                readOnly
               />
             </div>
-
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-1">Doctor NMC ID</label>
+              <input
+                type="text"
+                value={doctorNmcId}
+                onChange={(e) => setDoctorNmcId(e.target.value)}
+                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#09D8B6]"
+                placeholder="Enter Doctor NMC ID"
+              />
+            </div>
             <div className="mb-4">
               <label className="block text-gray-700 font-semibold mb-1">Select Disease</label>
               <select
@@ -140,7 +194,6 @@ const DoctorDashboard = () => {
                 <option value="covid">COVID</option>
               </select>
             </div>
-
             <div className="mb-4 flex items-center gap-3">
               <input
                 type="file"
@@ -150,19 +203,23 @@ const DoctorDashboard = () => {
               />
               <button
                 onClick={handleImageUpload}
-                className="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700"
+                disabled={isUploading} // Disable button while uploading
+                className={`bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 ${isUploading ? 'cursor-not-allowed opacity-50' : ''}`}
               >
-                Upload
+                {isUploading ? (
+                  <Oval color="#fff" height={20} width={20} /> // Show spinner while uploading
+                ) : (
+                  'Upload'
+                )}
               </button>
             </div>
-
             <div className="flex justify-between">
               <button
                 onClick={handleReportSubmit}
-                disabled={!imageUploaded}
-                className={`px-4 py-2 rounded text-white ${imageUploaded ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-300 cursor-not-allowed'}`}
+                disabled={!imageUploaded || !doctorNmcId || isGeneratingReport}
+                className={`px-4 py-2 rounded text-white ${imageUploaded && doctorNmcId && !isGeneratingReport ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-300 cursor-not-allowed'}`}
               >
-                Check Report
+                {isGeneratingReport ? 'Generating...' : 'Generate PDF Report'}
               </button>
               <button
                 onClick={() => {
@@ -177,7 +234,6 @@ const DoctorDashboard = () => {
                 Close
               </button>
             </div>
-
             {report && (
               <div className="mt-4 bg-gray-100 p-4 rounded">
                 <h3 className="font-bold">AI Report:</h3>
