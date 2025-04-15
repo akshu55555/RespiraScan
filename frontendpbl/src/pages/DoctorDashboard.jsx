@@ -14,7 +14,12 @@ const DoctorDashboard = () => {
   const [result, setResult] = useState(null);
   const [doctorNmcId, setDoctorNmcId] = useState('');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-  const [isUploading, setIsUploading] = useState(false); // New state for upload loading
+  const [isUploading, setIsUploading] = useState(false);
+
+  // New states for previous reports functionality
+  const [previousReports, setPreviousReports] = useState([]);
+  const [showReportsPopup, setShowReportsPopup] = useState(false);
+  const [isLoadingReports, setIsLoadingReports] = useState(false);
 
   useEffect(() => {
     const dummyPatients = [
@@ -51,58 +56,49 @@ const DoctorDashboard = () => {
     setImageUploaded(false);
     setSelectedDisease('');
     setResult(null);
-    setIsUploading(false); // Reset uploading state when popup opens
+    setIsUploading(false);
   };
 
-  const handleImageUpload = async () => {
-    if (!image || !selectedPatientId || !selectedDisease) {
-      return alert("Please select patient, disease, and image");
-    }
-
-    setIsUploading(true); // Set uploading to true
-
-    const formData = new FormData();
-    formData.append('image', image);
-    formData.append('patientId', selectedPatientId);
-    formData.append('disease', selectedDisease);
+  // Function to handle fetching previous reports
+  const handlePreviousReportsClick = async (patientId) => {
+    setSelectedPatientId(patientId);
+    setIsLoadingReports(true);
+    setShowReportsPopup(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/upload', formData);
-      setImageUploaded(true);
-      if (response.data && response.data.label) {
-        setResult(response.data);
-        setReport(`Diagnosis: ${response.data.label} (Confidence: ${(response.data.confidence * 100).toFixed(2)}%)`);
-      }
-      alert("Image uploaded successfully. You can now check the report.");
+      const response = await axios.post('http://localhost:5000/previous-reports', {
+        patientId: patientId
+      });
+
+      // Format dates properly
+      const reportsWithFormattedDates = response.data.reports.map(report => ({
+        ...report,
+        formattedDate: new Date(report.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      }));
+
+      setPreviousReports(reportsWithFormattedDates || []);
     } catch (err) {
-      console.error('Upload failed', err);
-      alert("Image upload failed.");
+      console.error('Failed to fetch previous reports', err);
+      alert('Failed to load previous reports. Please try again.');
+      setPreviousReports([]);
     } finally {
-      setIsUploading(false); // Set uploading to false
+      setIsLoadingReports(false);
     }
-  };
+};
 
-  const handleReportSubmit = async () => {
-    if (!result || selectedPatientId === null || !doctorNmcId || isGeneratingReport) {
-      return;
-    }
 
-    setIsGeneratingReport(true);
-
-    if (!doctorNmcId) {
-      console.error("Doctor NMC ID is undefined. Report generation cannot proceed.");
-      alert("Error: Doctor NMC ID is missing.");
-      setIsGeneratingReport(false);
-      return;
-    }
-
+  // Function to view a specific report
+  const handleViewReport = async (reportId) => {
     try {
-      const requestBody = {
-        id: selectedPatientId,
-        NMC_id: doctorNmcId,
-      };
-
-      const response = await axios.post('http://localhost:5000/report', requestBody, {
+      const response = await axios.post('http://localhost:5000/view-report', {
+        reportId: reportId
+      }, {
         responseType: 'blob',
         headers: {
           'Content-Type': 'application/json',
@@ -113,15 +109,211 @@ const DoctorDashboard = () => {
       const pdfUrl = URL.createObjectURL(pdfBlob);
 
       window.open(pdfUrl, '_blank');
-      setShowPopup(false);
     } catch (err) {
-      console.error('Report generation failed', err);
-      alert("Report generation failed.");
-    } finally {
-      setIsGeneratingReport(false);
+      console.error('Failed to view report', err);
+      alert('Failed to open report. Please try again.');
     }
   };
 
+  const handleImageUpload = async () => {
+    if (!image || !selectedPatientId || !selectedDisease) {
+      return alert("Please select patient, disease, and image");
+    }
+
+    setIsUploading(true);
+
+    const formData = new FormData();
+    formData.append('image', image);
+    formData.append('patientId', selectedPatientId);
+    formData.append('disease', selectedDisease);
+
+    let uploadRoute = 'http://localhost:5000/upload'; // Default fallback
+    if (selectedDisease === 'pneumonia') {
+      uploadRoute = 'http://localhost:5000/pneumonia';
+    } else if (selectedDisease === 'tuberculosis') {
+      uploadRoute = 'http://localhost:5000/tuberculosis';
+    }
+
+    try {
+      const response = await axios.post(uploadRoute, formData);
+      setImageUploaded(true);
+      if (response.data && response.data.label) {
+        setResult(response.data);
+        setReport(`Diagnosis: ${response.data.label} (Confidence: ${(response.data.confidence * 100).toFixed(2)}%)`);
+      }
+      alert("Image uploaded successfully. You can now check the report.");
+    } catch (err) {
+      console.error('Upload failed', err);
+      alert("Image upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // const handleReportSubmit = async () => {
+  //   if (!result || selectedPatientId === null || !doctorNmcId || isGeneratingReport) {
+  //     return;
+  //   }
+
+  //   setIsGeneratingReport(true);
+
+  //   if (!doctorNmcId) {
+  //     console.error("Doctor NMC ID is undefined. Report generation cannot proceed.");
+  //     alert("Error: Doctor NMC ID is missing.");
+  //     setIsGeneratingReport(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const requestBody = {
+  //       id: selectedPatientId,
+  //       NMC_id: doctorNmcId,
+  //     };
+
+  //     const response = await axios.post('http://localhost:5000/report', requestBody, {
+  //       responseType: 'blob',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     });
+
+  //     const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+  //     const pdfUrl = URL.createObjectURL(pdfBlob);
+
+  //     window.open(pdfUrl, '_blank');
+  //     setShowPopup(false);
+  //   } catch (err) {
+  //     console.error('Report generation failed', err);
+  //     alert("Report generation failed.");
+  //   } finally {
+  //     setIsGeneratingReport(false);
+  //   }
+  // };
+// const handleReportSubmit = async () => {
+//     if (!result || selectedPatientId === null || !doctorNmcId || isGeneratingReport) {
+//       return;
+//     }
+
+//     setIsGeneratingReport(true);
+
+//     try {
+//       const requestBody = {
+//         id: selectedPatientId,
+//         NMC_id: doctorNmcId,
+//       };
+
+//       const response = await axios.post('http://localhost:5000/report', requestBody, {
+//         responseType: 'blob', // Important for PDF download
+//       });
+
+//       // Create a blob from the response
+//       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      
+//       // Create a URL for the blob
+//       const pdfUrl = window.URL.createObjectURL(pdfBlob);
+      
+//       // Create a temporary anchor element to trigger download
+//       const link = document.createElement('a');
+//       link.href = pdfUrl;
+//       link.setAttribute('download', `RespiraScan_Report_${selectedPatientId}.pdf`);
+//       document.body.appendChild(link);
+      
+//       // Trigger the download
+//       link.click();
+      
+//       // Clean up
+//       document.body.removeChild(link);
+//       window.URL.revokeObjectURL(pdfUrl);
+      
+//       setShowPopup(false);
+//     } catch (err) {
+//       console.error('Report generation failed', err);
+//       alert("Report generation failed. Please try again.");
+//     } finally {
+//       setIsGeneratingReport(false);
+//     }
+//   };
+const handleReportSubmit = async () => {
+  if (!result || !selectedPatientId || !doctorNmcId || isGeneratingReport) {
+    return;
+  }
+
+  setIsGeneratingReport(true);
+
+  try {
+    const requestBody = {
+      id: selectedPatientId,
+      NMC_id: doctorNmcId,
+    };
+
+    // 1. Make the request with proper headers
+    const response = await axios.post('http://localhost:5000/report', requestBody, {
+      responseType: 'blob', // Crucial for PDF handling
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/pdf'
+      }
+    });
+
+    // 2. Verify the response
+    if (!response.data || response.data.size === 0) {
+      throw new Error('Empty PDF response from server');
+    }
+
+    // 3. Create a more reliable download method
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    
+    // Check for IE/Edge support
+    if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+      window.navigator.msSaveOrOpenBlob(blob, `RespiraScan_Report_${selectedPatientId}.pdf`);
+    } else {
+      // Modern browsers approach
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // 4. Set proper filename from response if available
+      const contentDisposition = response.headers['content-disposition'];
+      let fileName = `RespiraScan_Report_${selectedPatientId}.pdf`;
+      
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (fileNameMatch && fileNameMatch[1]) {
+          fileName = fileNameMatch[1];
+        }
+      }
+      
+      link.setAttribute('download', fileName);
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      
+      // 5. Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+    }
+
+    setShowPopup(false);
+  } catch (err) {
+    console.error('Report generation failed:', err);
+    
+    // 6. Enhanced error messaging
+    let errorMsg = "Report download failed. Please try again.";
+    if (err.response) {
+      if (err.response.status === 404) {
+        errorMsg = "Patient or doctor not found.";
+      } else if (err.response.status === 500) {
+        errorMsg = "Server error during report generation.";
+      }
+    }
+    
+    alert(errorMsg);
+  } finally {
+    setIsGeneratingReport(false);
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#09D8B6] p-6 flex flex-col items-center">
       <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Doctor Dashboard</h1>
@@ -144,7 +336,10 @@ const DoctorDashboard = () => {
             <p className="text-gray-700">Patient ID: {patient._id}</p>
             <p className="text-gray-700">Email: {patient.email}</p>
             <div className="mt-3 flex space-x-3">
-              <button className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600">
+              <button
+                className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
+                onClick={() => handlePreviousReportsClick(patient._id)}
+              >
                 Previous Reports
               </button>
               <button
@@ -158,6 +353,7 @@ const DoctorDashboard = () => {
         ))}
       </div>
 
+      {/* Upload X-ray Report Popup */}
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] md:w-1/2">
@@ -191,7 +387,7 @@ const DoctorDashboard = () => {
               >
                 <option value="">-- Select Disease --</option>
                 <option value="pneumonia">Pneumonia</option>
-                <option value="covid">COVID</option>
+                <option value="tuberculosis">Tuberculosis</option>
               </select>
             </div>
             <div className="mb-4 flex items-center gap-3">
@@ -203,11 +399,11 @@ const DoctorDashboard = () => {
               />
               <button
                 onClick={handleImageUpload}
-                disabled={isUploading} // Disable button while uploading
+                disabled={isUploading}
                 className={`bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 ${isUploading ? 'cursor-not-allowed opacity-50' : ''}`}
               >
                 {isUploading ? (
-                  <Oval color="#fff" height={20} width={20} /> // Show spinner while uploading
+                  <Oval color="#fff" height={20} width={20} />
                 ) : (
                   'Upload'
                 )}
@@ -240,6 +436,56 @@ const DoctorDashboard = () => {
                 <p>{report}</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Previous Reports Popup */}
+      {showReportsPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] md:w-1/2 max-h-[80vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Previous Reports for Patient ID: {selectedPatientId}</h2>
+
+            {isLoadingReports ? (
+              <div className="flex justify-center items-center h-40">
+                <Oval color="#09D8B6" height={40} width={40} />
+              </div>
+            ) : previousReports.length > 0 ? (
+              <div className="space-y-3">
+                            {previousReports.map((report) => (
+              <div
+                key={report.id}
+                className="bg-gray-100 p-4 rounded-lg hover:bg-gray-200 cursor-pointer transition"
+                onClick={() => handleViewReport(report.id)}
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">{report.diagnosis}</p>
+                    <p className="text-sm text-gray-600">
+                      Date: {report.formattedDate || new Date(report.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm">
+                    View
+                  </button>
+                </div>
+              </div>
+            ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No previous reports found for this patient.
+              </div>
+            )}
+
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setShowReportsPopup(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                Close
+              </button>
+            </div>  
           </div>
         </div>
       )}

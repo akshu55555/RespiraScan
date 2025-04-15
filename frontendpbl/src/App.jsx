@@ -6,8 +6,10 @@ import PatientLogin from './pages/PatientLogin'
 import DoctorSignup from './pages/DoctorSignup.jsx'
 import PatientSignup from './pages/PatientSignup'
 import DoctorDashboard from './pages/DoctorDashboard' 
+import ReportHandler from './pages/ReportHandler.jsx'
 
 function App() {
+  const patientId=123;
   return (
     <div className="app min-h-screen bg-gradient-to-b from-white to-[#09D8B6]">
       <Header />
@@ -18,6 +20,7 @@ function App() {
         <Route path="/doctor-signup" element={<DoctorSignup />} />
         <Route path="/patient-signup" element={<PatientSignup />} />
         <Route path="/doctor-dashboard" element={<DoctorDashboard />} /> 
+        <Route path="/reports" element={<ReportHandler patientId={patientId} />} /> 
       </Routes>
     </div>
   )
