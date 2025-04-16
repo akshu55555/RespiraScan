@@ -21,7 +21,6 @@ import previous from './controllers/previouscontroller.js';
 import view from './controllers/viewcontroller.js';
 import { ReportModel } from './db.js';
 
-
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,199 +31,198 @@ app.use(cookieParser());
 app.use(express.json({ strict: false }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin:"*",
-  methods: "GET,POST,PUT,DELETE",
-  credentials:true,
+    origin:"*",
+    methods: "GET,POST,PUT,DELETE",
+    credentials:true,
 }));
 
 // Ensure directories exist
-// Ensure directories exist
 if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
+    fs.mkdirSync('uploads');
 }
 if (!fs.existsSync('reports')) {
-  fs.mkdirSync('reports');
+    fs.mkdirSync('reports');
 }
 if (!fs.existsSync('visualizations')) {
-  fs.mkdirSync('visualizations');
+    fs.mkdirSync('visualizations');
 }
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => {
-      cb(null, Date.now() + path.extname(file.originalname));
-  }
+    destination: "uploads/",
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
 });
 const upload = multer({ storage });
 
 // Function to run Python prediction (for pneumonia)
 function predictImage(imagePath) {
-  return new Promise((resolve, reject) => {
-      console.log(`Running pneumonia prediction on: ${imagePath}`);
+    return new Promise((resolve, reject) => {
+        console.log(`Running pneumonia prediction on: ${imagePath}`);
 
-      // Check if file exists
-      if (!fs.existsSync(imagePath)) {
-          return reject(`File not found: ${imagePath}`);
-      }
+        // Check if file exists
+        if (!fs.existsSync(imagePath)) {
+            return reject(`File not found: ${imagePath}`);
+        }
 
-      const python = spawn('python', ['predict.py', imagePath]);
+        const python = spawn('python', ['predict.py', imagePath]);
 
-      let stdout = '';
-      let stderr = '';
+        let stdout = '';
+        let stderr = '';
 
-      python.stdout.on('data', (data) => {
-          stdout += data.toString();
-          console.log("Python stdout:", data.toString().trim());
-      });
+        python.stdout.on('data', (data) => {
+            stdout += data.toString();
+            console.log("Python stdout:", data.toString().trim());
+        });
 
-      python.stderr.on('data', (data) => {
-          stderr += data.toString();
-          console.log("Python stderr:", data.toString().trim());
-      });
+        python.stderr.on('data', (data) => {
+            stderr += data.toString();
+            console.log("Python stderr:", data.toString().trim());
+        });
 
-      python.on('close', (code) => {
-          console.log(`Python process exited with code ${code}`);
+        python.on('close', (code) => {
+            console.log(`Python process exited with code ${code}`);
 
-          if (code === 0) {
-              try {
-                  // Give a moment for streams to finish and log the raw output
-                  setTimeout(() => {
-                      console.log("📦 Raw Python stdout:", stdout.trim());
+            if (code === 0) {
+                try {
+                    // Give a moment for streams to finish and log the raw output
+                    setTimeout(() => {
+                        console.log("📦 Raw Python stdout:", stdout.trim());
 
-                      try {
-                          const output = JSON.parse(stdout.trim());
-                          resolve(output);
-                      } catch (err) {
-                          reject(`Failed to parse JSON: ${err.message}, Raw output: ${stdout.trim()}`);
-                      }
-                  }, 100);
-              } catch (err) {
-                  reject(`Error in timeout handler: ${err.message}`);
-              }
-          } else {
-              console.error(`Python script failed with code ${code}`);
-              reject(`Python script error: ${stderr}`);
-          }
-      });
+                        try {
+                            const output = JSON.parse(stdout.trim());
+                            resolve(output);
+                        } catch (err) {
+                            reject(`Failed to parse JSON: ${err.message}, Raw output: ${stdout.trim()}`);
+                        }
+                    }, 100);
+                } catch (err) {
+                    reject(`Error in timeout handler: ${err.message}`);
+                }
+            } else {
+                console.error(`Python script failed with code ${code}`);
+                reject(`Python script error: ${stderr}`);
+            }
+        });
 
-      python.on('error', (err) => {
-          reject(`Failed to start Python process: ${err.message}`);
-      });
-  });
+        python.on('error', (err) => {
+            reject(`Failed to start Python process: ${err.message}`);
+        });
+    });
 }
 
 // Function to run Python prediction (for tuberculosis)
 function predictTuberculosisImage(imagePath) {
-  return new Promise((resolve, reject) => {
-      console.log(`Running tuberculosis prediction on: ${imagePath}`);
+    return new Promise((resolve, reject) => {
+        console.log(`Running tuberculosis prediction on: ${imagePath}`);
 
-      // Check if file exists
-      if (!fs.existsSync(imagePath)) {
-          return reject(`File not found: ${imagePath}`);
-      }
+        // Check if file exists
+        if (!fs.existsSync(imagePath)) {
+            return reject(`File not found: ${imagePath}`);
+        }
 
-      const python = spawn('python', ['predict2.py', imagePath]); // Use predict2.py
+        const python = spawn('python', ['predict2.py', imagePath]); // Use predict2.py
 
-      let stdout = '';
-      let stderr = '';
+        let stdout = '';
+        let stderr = '';
 
-      python.stdout.on('data', (data) => {
-          stdout += data.toString();
-          console.log("Python stdout (TB):", data.toString().trim());
-      });
+        python.stdout.on('data', (data) => {
+            stdout += data.toString();
+            console.log("Python stdout (TB):", data.toString().trim());
+        });
 
-      python.stderr.on('data', (data) => {
-          stderr += data.toString();
-          console.log("Python stderr (TB):", data.toString().trim());
-      });
+        python.stderr.on('data', (data) => {
+            stderr += data.toString();
+            console.log("Python stderr (TB):", data.toString().trim());
+        });
 
-      python.on('close', (code) => {
-          console.log(`Python process exited with code ${code} (TB)`);
+        python.on('close', (code) => {
+            console.log(`Python process exited with code ${code} (TB)`);
 
-          if (code === 0) {
-              try {
-                  // Give a moment for streams to finish and log the raw output
-                  setTimeout(() => {
-                      console.log("📦 Raw Python stdout (TB):", stdout.trim());
+            if (code === 0) {
+                try {
+                    // Give a moment for streams to finish and log the raw output
+                    setTimeout(() => {
+                        console.log("📦 Raw Python stdout (TB):", stdout.trim());
 
-                      try {
-                          const output = JSON.parse(stdout.trim());
-                          resolve(output);
-                      } catch (err) {
-                          reject(`Failed to parse JSON (TB): ${err.message}, Raw output: ${stdout.trim()}`);
-                      }
-                  }, 100);
-              } catch (err) {
-                  reject(`Error in timeout handler (TB): ${err.message}`);
-              }
-          } else {
-              console.error(`Python script failed with code ${code} (TB)`);
-              reject(`Python script error (TB): ${stderr}`);
-          }
-      });
+                        try {
+                            const output = JSON.parse(stdout.trim());
+                            resolve(output);
+                        } catch (err) {
+                            reject(`Failed to parse JSON (TB): ${err.message}, Raw output: ${stdout.trim()}`);
+                        }
+                    }, 100);
+                } catch (err) {
+                    reject(`Error in timeout handler (TB): ${err.message}`);
+                }
+            } else {
+                console.error(`Python script failed with code ${code} (TB)`);
+                reject(`Python script error (TB): ${stderr}`);
+            }
+        });
 
-      python.on('error', (err) => {
-          reject(`Failed to start Python process (TB): ${err.message}`);
-      });
-  });
+        python.on('error', (err) => {
+            reject(`Failed to start Python process (TB): ${err.message}`);
+        });
+    });
 }
 
 // Function to run Grad-CAM visualization
-function runGradCAM(imagePath) {
-  return new Promise((resolve, reject) => {
-      console.log(`Running Grad-CAM on: ${imagePath}`);
+// function runGradCAM(imagePath) {
+//     return new Promise((resolve, reject) => {
+//         console.log(`Running Grad-CAM on: ${imagePath}`);
 
-      // Check if file exists
-      if (!fs.existsSync(imagePath)) {
-          return reject(`File not found: ${imagePath}`);
-      }
+//         // Check if file exists
+//         if (!fs.existsSync(imagePath)) {
+//             return reject(`File not found: ${imagePath}`);
+//         }
 
-      const python = spawn('python', ['gradcam.py', imagePath]);
+//         const python = spawn('python', ['gradcam.py', imagePath]);
 
-      let stdout = '';
-      let stderr = '';
+//         let stdout = '';
+//         let stderr = '';
 
-      python.stdout.on('data', (data) => {
-          stdout += data.toString();
-          console.log("Grad-CAM stdout:", data.toString().trim());
-      });
+//         python.stdout.on('data', (data) => {
+//             stdout += data.toString();
+//             console.log("Grad-CAM stdout:", data.toString().trim());
+//         });
 
-      python.stderr.on('data', (data) => {
-          stderr += data.toString();
-          console.log("Grad-CAM stderr:", data.toString().trim());
-      });
+//         python.stderr.on('data', (data) => {
+//             stderr += data.toString();
+//             console.log("Grad-CAM stderr:", data.toString().trim());
+//         });
 
-      python.on('close', (code) => {
-          console.log(`Grad-CAM process exited with code ${code}`);
+//         python.on('close', (code) => {
+//             console.log(`Grad-CAM process exited with code ${code}`);
 
-          if (code === 0) {
-              try {
-                  // Give a moment for streams to finish
-                  setTimeout(() => {
-                      console.log("📦 Raw Grad-CAM stdout:", stdout.trim());
+//             if (code === 0) {
+//                 try {
+//                     // Give a moment for streams to finish
+//                     setTimeout(() => {
+//                         console.log("📦 Raw Grad-CAM stdout:", stdout.trim());
 
-                      try {
-                          const output = JSON.parse(stdout.trim());
-                          resolve(output);
-                      } catch (err) {
-                          reject(`Failed to parse JSON: ${err.message}, Raw output: ${stdout.trim()}`);
-                      }
-                  }, 100);
-              } catch (err) {
-                  reject(`Error in timeout handler: ${err.message}`);
-              }
-          } else {
-              console.error(`Grad-CAM script failed with code ${code}`);
-              reject(`Grad-CAM script error: ${stderr}`);
-          }
-      });
+//                         try {
+//                             const output = JSON.parse(stdout.trim());
+//                             resolve(output);
+//                         } catch (err) {
+//                             reject(`Failed to parse JSON: ${err.message}, Raw output: ${stdout.trim()}`);
+//                         }
+//                     }, 100);
+//                 } catch (err) {
+//                     reject(`Error in timeout handler: ${err.message}`);
+//                 }
+//             } else {
+//                 console.error(`Grad-CAM script failed with code ${code}`);
+//                 reject(`Grad-CAM script error: ${stderr}`);
+//             }
+//         });
 
-      python.on('error', (err) => {
-          reject(`Failed to start Grad-CAM process: ${err.message}`);
-      });
-  });
-}
+//         python.on('error', (err) => {
+//             reject(`Failed to start Grad-CAM process: ${err.message}`);
+//         });
+//     });
+// }
 
 // Routes
 app.get('/', (req, res) => res.status(200).json("HELLO"));
@@ -236,294 +234,453 @@ app.use('/loginpatient', loginpatient);
 app.use('/previous-reports',previous);
 app.use('/view-report',view);
 app.post("/logout", (req, res) => {
-  res.clearCookie("token");
-  res.json({ message: "Logged out" });
+    res.clearCookie("token");
+    res.json({ message: "Logged out" });
 });
 
 // Upload + Predict route for pneumonia
 let final_result;
 app.post('/pneumonia', upload.single('image'), async (req, res) => {
-  try {
-      if (!req.file) {
-          return res.status(400).json({ error: "No file uploaded" });
-      }
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
 
-      console.log("File uploaded for pneumonia:", req.file);
-      const imagePath = req.file.path;
+        console.log("File uploaded for pneumonia:", req.file);
+        const imagePath = req.file.path;
 
-      // Run prediction
-      const result = await predictImage(imagePath);
+        // Run prediction
+        const result = await predictImage(imagePath);
 
-      // Store result for report generation
-      final_result = result;
+        // Store result for report generation
+        final_result = result;
 
-      console.log("Pneumonia prediction result:", result);
-      res.json(result);
-  } catch (err) {
-      console.error('❌ Pneumonia prediction failed:', err);
-      res.status(500).json({ error: 'Pneumonia prediction failed', details: err.toString() });
-  }
-  // Don't delete the file here since we'll need it for visualization
+        console.log("Pneumonia prediction result:", result);
+        res.json(result);
+    } catch (err) {
+        console.error('❌ Pneumonia prediction failed:', err);
+        res.status(500).json({ error: 'Pneumonia prediction failed', details: err.toString() });
+    }
+    // Don't delete the file here since we'll need it for visualization
 });
 
 // Upload + Predict route for tuberculosis
 app.post('/tuberculosis', upload.single('image'), async (req, res) => {
-  try {
-      if (!req.file) {
-          return res.status(400).json({ error: "No file uploaded" });
-      }
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
 
-      console.log("File uploaded for tuberculosis:", req.file);
-      const imagePath = req.file.path;
+        console.log("File uploaded for tuberculosis:", req.file);
+        const imagePath = req.file.path;
 
-      // Run prediction for tuberculosis
-      const result = await predictTuberculosisImage(imagePath); // Use the tuberculosis prediction function
+        // Run prediction for tuberculosis
+        const result = await predictTuberculosisImage(imagePath); // Use the tuberculosis prediction function
 
-      // Store result for report generation
-      final_result = result;
+        // Store result for report generation
+        final_result = result;
 
-      console.log("Tuberculosis prediction result:", result);
-      res.json(result);
-  } catch (err) {
-      console.error('❌ Tuberculosis prediction failed:', err);
-      res.status(500).json({ error: 'Tuberculosis prediction failed', details: err.toString() });
-  }
-  // Don't delete the file here since we'll need it for visualization
+        console.log("Tuberculosis prediction result:", result);
+        res.json(result);
+    } catch (err) {
+        console.error('❌ Tuberculosis prediction failed:', err);
+        res.status(500).json({ error: 'Tuberculosis prediction failed', details: err.toString() });
+    }
+    // Don't delete the file here since we'll need it for visualization
 });
-
-// New route for Grad-CAM visualization
-app.post('/visual', upload.single('image'), async (req, res) => {
-  try {
-      // Use existing image path if provided
-      let imagePath;
-
-      if (req.body.imagePath && fs.existsSync(req.body.imagePath)) {
-          // Use image path from request
-          imagePath = req.body.imagePath;
-      } else if (req.file) {
-          // Use newly uploaded file
-          imagePath = req.file.path;
-      } else {
-          return res.status(400).json({ error: "No image provided" });
-      }
-
-      console.log("Running Grad-CAM visualization on:", imagePath);
-
-      const result = await runGradCAM(imagePath);
-      console.log("Grad-CAM result:", result);
-
-      res.json(result);
-  } catch (err) {
-      console.error('❌ Grad-CAM visualization failed:', err);
-      res.status(500).json({ error: 'Visualization failed', details: err.toString() });
-  } finally {
-      // Clean up only if a new file was uploaded
-      if (req.file) {
-          fs.unlink(req.file.path, (err) => {
-              if (err) console.error('Error deleting uploaded file:', err);
-          });
-      }
-  }
-});
-// Serve visualization images
-app.use('/visualizations', express.static('visualizations'));
 
 // Report generation route
+// app.post('/report', async (req, res) => {
+//     try {
+//       const { id: patientId, NMC_id: doctorNmcId } = req.body;
+      
+//       if (!patientId || !doctorNmcId) {
+//         return res.status(400).json({ error: "Patient ID and Doctor NMC ID are required" });
+//       }
+  
+//       // Fetch patient information
+//       const patient = await PatientModel.findOne({ where: { id: patientId } });
+//       if (!patient) {
+//         return res.status(404).json({ error: "Patient not found" });
+//       }
+  
+//       // Fetch doctor information
+//       const doctor = await DoctorModel.findOne({ where: { NMC_id: doctorNmcId } });
+//       if (!doctor) {
+//         return res.status(404).json({ error: "Doctor not found" });
+//       }
+//       console.log("patient",patient);
+//       console.log("doctor",doctor);
+//       // Use the final_result that was stored from prediction
+//       if (!final_result) {
+//         return res.status(400).json({ error: "No diagnosis result found. Please upload an image first." });
+//       }
+  
+//       // Generate a unique filename for the PDF
+//       const reportFilename = `RespiraScan_Report_${patientId}_${Date.now()}.pdf`;
+//       const reportPath = path.join('C:', 'Users', 'shilpa', 'OneDrive', 'Desktop', 'RespiraScan', 'RespiraScan', 'backendpbl', 'reports', reportFilename);
+//       // Create the PDF document
+//       const doc = new PDFDocument({ margin: 50 });
+      
+//       // Pipe the PDF to a writable stream
+//       const writeStream = fs.createWriteStream(reportPath);
+//       doc.pipe(writeStream);
+  
+//       // PDF content generation (same as before)
+//       doc.fontSize(25)
+//          .font('Helvetica-Bold')
+//          .text('RespiraScan Medical Report', { align: 'center' })
+//          .moveDown(1);
+  
+//       // Add current date
+//       const currentDate = new Date().toLocaleDateString('en-US', {
+//         year: 'numeric',
+//         month: 'long',
+//         day: 'numeric'
+//       });
+//       doc.fontSize(12)
+//          .font('Helvetica')
+//          .text(`Report Date: ${currentDate}`, { align: 'right' })
+//          .moveDown(1);
+  
+//       // Draw a horizontal line
+//       doc.moveTo(50, doc.y)
+//          .lineTo(doc.page.width - 50, doc.y)
+//          .stroke()
+//          .moveDown(1);
+  
+//       // Patient information section
+//       doc.fontSize(16)
+//          .font('Helvetica-Bold')
+//          .text('Patient Information')
+//          .moveDown(0.5);
+      
+//       doc.fontSize(12)
+//          .font('Helvetica')
+//          .text(`Patient ID: ${patient.patient_id}`)
+//          .text(`Name: ${patient.name}`)
+//          .text(`Email: ${patient.email}`)
+//          .text(`Age: ${patient.age || 'Not provided'}`)
+//          .text(`Sex: ${patient.sex || 'Not provided'}`)
+//          .moveDown(1);
+  
+//       // Doctor information section
+//       doc.fontSize(16)
+//          .font('Helvetica-Bold')
+//          .text('Doctor Information')
+//          .moveDown(0.5);
+      
+//       doc.fontSize(12)
+//          .font('Helvetica')
+//          .text(`Doctor Name: ${doctor.name}`)
+//          .text(`NMC ID: ${doctor.NMC_id}`)
+//          .text(`Email: ${doctor.email}`)
+//          .moveDown(1);
+  
+//       // Diagnosis results section
+//       doc.fontSize(16)
+//          .font('Helvetica-Bold')
+//          .text('Diagnosis Results')
+//          .moveDown(0.5);
+      
+//       doc.fontSize(12)
+//          .font('Helvetica')
+//          .text(`Diagnosis: ${final_result.label}`)
+//          .text(`Confidence: ${(final_result.confidence * 100).toFixed(2)}%`)
+//          .moveDown(0.5);
+  
+//       // Recommendations section
+//       doc.fontSize(14)
+//          .font('Helvetica-Bold')
+//          .text('Recommendations:')
+//          .moveDown(0.5);
+        
+//       doc.fontSize(12)
+//          .font('Helvetica');
+         
+//       // Specific recommendations based on the disease
+//       if (final_result.label.toLowerCase().includes('pneumonia')) {
+//         doc.text('1. Rest and adequate hydration are essential.')
+//            .text('2. Follow the prescribed antibiotic regimen completely.')
+//            .text('3. Schedule a follow-up X-ray to confirm resolution.')
+//            .text('4. Consult with your doctor before resuming physical activities.')
+//            .moveDown(1);
+//       } else if (final_result.label.toLowerCase().includes('tuberculosis')) {
+//         doc.text('1. Complete the full course of prescribed TB medications.')
+//            .text('2. Attend all scheduled follow-up appointments.')
+//            .text('3. Follow infection control measures to prevent transmission.')
+//            .text('4. Report any adverse medication reactions to your healthcare provider.')
+//            .moveDown(1);
+//       } else {
+//         doc.text('1. Maintain good respiratory hygiene practices.')
+//            .text('2. Schedule regular check-ups with your healthcare provider.')
+//            .text('3. Report any new or worsening symptoms promptly.')
+//            .moveDown(1);
+//       }
+  
+//       // Disclaimer
+//       doc.fontSize(10)
+//          .font('Helvetica-Oblique')
+//          .text('Disclaimer: This is an AI-assisted diagnosis and should be confirmed by a healthcare professional. ' +
+//                'The results provided are not a substitute for professional medical advice, diagnosis, or treatment.', {
+//            align: 'justify'
+//          })
+//          .moveDown(2);
+  
+//       // Footer with signature line
+//       doc.fontSize(12)
+//          .font('Helvetica')
+//          .text('____________________________', { align: 'right' })
+//          .moveDown(0.5)
+//          .text(`Dr. ${doctor.name}`, { align: 'right' })
+//          .moveDown(0.2)
+//          .text(`NMC ID: ${doctor.NMC_id}`, { align: 'right' });
+  
+//       // Finalize the PDF
+//       doc.end();
+  
+//       // Wait for PDF creation to complete
+//       writeStream.on('finish', async () => {
+//         try {
+//           // Create a record in the ReportModel with more complete information
+//           const newReport = await ReportModel.create({
+//             patient_id: patient.id,
+//             reportPath: reportFilename,  // Just the filename for storage efficiency
+//             diagnosis: final_result.label,
+            
+//           });
+  
+//           // Send the PDF as a response
+//           res.setHeader('Content-Type', 'application/pdf');
+//           res.setHeader('Content-Disposition', `inline; filename="${reportFilename}"`);
+          
+//           // Stream the file to the response
+//           fs.createReadStream(reportPath).pipe(res);
+//         } catch (err) {
+//           console.error('Error saving report to database:', err);
+//           res.status(500).json({ error: 'Failed to save report' });
+//         }
+//       });
+  
+//       writeStream.on('error', (err) => {
+//         console.error('Error creating PDF:', err);
+//         res.status(500).json({ error: 'PDF generation failed' });
+//       });
+  
+//     } catch (err) {
+//       console.error('Report generation error:', err);
+//       res.status(500).json({ error: 'Report generation failed', details: err.toString() });
+//     }
+//   });
+
 app.post('/report', async (req, res) => {
   try {
-    console.log("entered report");
-    const { id, NMC_id } = req.body;
-    console.log("patient id", id);
-    const patient = await PatientModel.findByPk(id);
-    if (!patient) return res.status(404).json({ error: "Patient not found" });
+      const { id: patientId, NMC_id: doctorNmcId } = req.body;
 
-    const doctorInfo = await DoctorModel.findOne({
-      attributes: ['NMC_id', 'name', 'contact'],
-      where: { NMC_id: NMC_id }
-    });
-    if (!doctorInfo) return res.status(404).json({ error: "Doctor not found" });
-    console.log(doctorInfo.name);
-
-    const doc = new PDFDocument({
-      size: 'A4',
-      margins: { top: 40, bottom: 40, left: 40, right: 40 }, // Adjust margins for symmetry
-      background: '#e0f2f7' // Light blue background
-    });
-    const pdfPath = `backendpbl/reports/${Date.now()}_report.pdf`;
-    const writeStream = fs.createWriteStream(pdfPath);
-    doc.pipe(writeStream);
-
-    const greenColor = '#4caf50'; // Green color for lines
-    const labelWidth = 150; // Define a fixed width for labels
-    const valueX = labelWidth + 10; // X-coordinate for values
-
-    // --- Header ---
-    const logoPath = path.join(__dirname, 'public', 'images', 'respira_logo.png'); // Replace with your actual logo path
-    try {
-      doc.image(logoPath, 40, 40, { width: 70, align: 'left' }); // Adjust position and size, align left
-    } catch (err) {
-      console.error("Error loading logo:", err);
-    }
-    doc.fontSize(26).font('Helvetica-Bold').fillColor('#2196f3').text('RespiraScan', 120, 45, { align: 'left' }); // Bold, blue software name
-    doc.fontSize(16).fillColor('#757575').text('Diagnosis Report', 120, 75, { align: 'left' }); // Gray subtitle
-    doc.strokeColor(greenColor)
-      .lineWidth(1.5)
-      .moveTo(40, 115)
-      .lineTo(560, 115)
-      .stroke();
-    doc.moveDown(1.5);
-
-    // --- Doctor Information ---
-    doc.fontSize(18).font('Helvetica-Bold').fillColor('#3f51b5').text('Doctor Information', 40, doc.y); // Bold, indigo heading
-    doc.moveDown(0.7);
-    doc.fontSize(14).fillColor('#212121').text(`Doctor Name:`, 80, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#424242').text(`${doctorInfo.name}`, valueX, doc.y, { align: 'left' });
-    doc.moveDown(0.5);
-    doc.fontSize(14).fillColor('#212121').text(`Doctor Contact:`, 80, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#424242').text(`${doctorInfo.contact}`, valueX, doc.y, { align: 'left' });
-    doc.moveDown(1);
-    doc.strokeColor(greenColor)
-      .lineWidth(0.8)
-      .moveTo(40, doc.y)
-      .lineTo(560, doc.y)
-      .stroke();
-    doc.moveDown(1.5);
-
-    // --- Patient Information ---
-    doc.fontSize(18).font('Helvetica-Bold').fillColor('#3f51b5').text('Patient Information', 40, doc.y); // Bold, indigo heading
-    doc.moveDown(0.7);
-    doc.fontSize(14).fillColor('#212121').text(`Patient Name:`, 50, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#424242').text(`${patient.name}`, valueX, doc.y, { align: 'left' });
-    doc.moveDown(0.5);
-    doc.fontSize(14).fillColor('#212121').text(`Patient ID:`, 50, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#424242').text(`${patient.id}`, valueX, doc.y, { align: 'left' });
-    doc.moveDown(0.5);
-    doc.fontSize(14).fillColor('#212121').text(`Sex:`, 50, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#424242').text(`${patient.sex}`, valueX, doc.y, { align: 'left' });
-    doc.moveDown(0.5);
-    doc.fontSize(14).fillColor('#212121').text(`Email:`, 50, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#424242').text(`${patient.email}`, valueX, doc.y, { align: 'left' });
-    doc.moveDown(0.5);
-    doc.fontSize(14).fillColor('#212121').text(`Age:`, 50, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#424242').text(`${patient.age}`, valueX, doc.y, { align: 'left' });
-    doc.moveDown(0.5);
-    doc.fontSize(14).fillColor('#212121').text(`Blood Group:`, 50, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#424242').text(`${patient.bg}`, valueX, doc.y, { align: 'left' });
-    doc.moveDown(0.5);
-    doc.fontSize(14).fillColor('#212121').text(`Weight:`, 50, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#424242').text(`${patient.weight}`, valueX, doc.y, { align: 'left' });
-    doc.moveDown(0.5);
-    doc.fontSize(14).fillColor('#212121').text(`Height:`, 50, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#424242').text(`${patient.height}`, valueX, doc.y, { align: 'left' });
-    doc.moveDown(1);
-    doc.strokeColor(greenColor)
-      .lineWidth(0.8)
-      .moveTo(40, doc.y)
-      .lineTo(560, doc.y)
-      .stroke();
-    doc.moveDown(1.5);
-
-    // --- Diagnosis ---
-    doc.fontSize(18).font('Helvetica-Bold').fillColor('#3f51b5').text('Diagnosis', 40, doc.y); // Bold, indigo heading
-    doc.moveDown(0.7);
-    doc.fontSize(14).fillColor('#212121').text(`Diagnosis:`, 50, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#2e7d32').font('Helvetica-Bold').text(`${final_result.label}`, valueX, doc.y, { align: 'left' }); // Bold green diagnosis
-    doc.moveDown(0.5);
-    doc.fontSize(14).fillColor('#212121').text(`Confidence:`, 50, doc.y, { width: labelWidth, align: 'left' });
-    doc.fontSize(14).fillColor('#2e7d32').font('Helvetica-Bold').text(`${(final_result.confidence * 100).toFixed(2)}%`, valueX, doc.y, { align: 'left' }); // Bold green confidence
-    doc.moveDown(2);
-
-    // Check if visualization exists and add it to the report
-    if (final_result.visualizations && final_result.visualizations.overlay) {
-      try {
-        const overlayPath = final_result.visualizations.overlay;
-        if (fs.existsSync(overlayPath)) {
-          doc.fontSize(16).fillColor('#3f51b5').text('Visualization:', 40, doc.y, { align: 'left' });
-          doc.moveDown(0.5);
-          doc.image(overlayPath, {
-            fit: [480, 300],
-            align: 'center'
-          });
-          doc.moveDown(1);
-          doc.fontSize(12).fillColor('#757575').text('Heatmap shows areas of the image most influential in the diagnosis', { align: 'center' });
-          doc.moveDown(1);
-        }
-      } catch (err) {
-        console.error("Error adding visualization to report:", err);
+      if (!patientId || !doctorNmcId) {
+          return res.status(400).json({ error: "Patient ID and Doctor NMC ID are required" });
       }
-    }
 
-    // --- Footer ---
-    const reportDate = new Date().toLocaleString();
-    doc.strokeColor(greenColor)
-      .lineWidth(1.5)
-      .moveTo(40, doc.page.height - 60)
-      .lineTo(560, doc.page.height - 60)
-      .stroke();
-    doc.fontSize(12).fillColor('#757575').text(`Report Date: ${reportDate}`, 40, doc.page.height - 45, { align: 'left' });
-    doc.fontSize(12).fillColor('#757575').text('Prediction is model based and thus can be inaccurate', 40, doc.page.height - 30, { align: 'left' });
-    doc.fontSize(12).fillColor('#757575').text(`Page 1`, doc.page.width - 80, doc.page.height - 45, { align: 'right' });
+      // Fetch patient information
+      const patient = await PatientModel.findOne({ where: { id: patientId } });
+      if (!patient) {
+          return res.status(404).json({ error: "Patient not found" });
+      }
 
-    doc.end();
-    console.log("pdf generated");
-    try {
-      await ReportModel.create({
-        patient_id: patient.id,
-        reportPath: pdfPath,
-        diagnosis: final_result.label,
+      // Fetch doctor information
+      const doctor = await DoctorModel.findOne({ where: { NMC_id: doctorNmcId } });
+      if (!doctor) {
+          return res.status(404).json({ error: "Doctor not found" });
+      }
+      console.log("patient", patient);
+      console.log("doctor", doctor);
+      // Use the final_result that was stored from prediction
+      if (!final_result) {
+          return res.status(400).json({ error: "No diagnosis result found. Please upload an image first." });
+      }
+
+      // Generate a unique filename for the PDF
+      const reportFilename = `RespiraScan_Report_${patientId}_${Date.now()}.pdf`;
+      const reportPath = path.join('C:', 'Users', 'shilpa', 'OneDrive', 'Desktop', 'RespiraScan', 'RespiraScan', 'backendpbl', 'reports', reportFilename);
+      // Create the PDF document
+      const doc = new PDFDocument({ margin: 50 });
+
+      // Pipe the PDF to a writable stream
+      const writeStream = fs.createWriteStream(reportPath);
+      doc.pipe(writeStream);
+
+      // Define logo path and size
+      const logoPath = path.join(__dirname, '..', 'public', 'images', 'respira_logo.png');
+      const logoSize = 60; // Increased from 36 to 60
+
+      // Function to add the logo at the top left corner
+      const addLogo = () => {
+          try {
+              // Position logo at top left (50 from left, 50 from top)
+              // Make it square and larger
+              doc.image(logoPath, 50, 50, { width: logoSize, height: logoSize });
+          } catch (error) {
+              console.error('Error adding logo:', error);
+          }
+      };
+
+      // Add the logo at the beginning of the document
+      addLogo();
+
+      // Function to add a heading
+      const addHeading = (text) => {
+          doc.fillColor('black')
+              .fontSize(16)
+              .font('Helvetica-Bold')
+              .text(text, 50, doc.y)
+              .moveDown(0.7);
+      };
+
+      // PDF content generation
+      // Position the title to align with the logo vertically
+      const titleY = 50 + (logoSize / 2) - (25 / 2); // Center align with logo
+      
+      doc.fontSize(25)
+          .font('Helvetica-Bold')
+          .text('RespiraScan Medical Report', 50 + logoSize + 20, titleY, { align: 'left' }) // Positioned to right of logo
+          .moveDown(1.5); // Adjusted spacing
+
+      // Add current date
+      const currentDate = new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
       });
-      console.log("Report created successfully");
-    } catch (err) {
-      console.error("Error creating report:", err.message);
-      console.error(err.stack);
-    }
+      doc.fontSize(12)
+          .font('Helvetica')
+          .text(`Report Date: ${currentDate}`, { align: 'right' })
+          .moveDown(1);
 
-    writeStream.on('finish', () => {
-      res.download(pdfPath, 'RespiraScan_Report.pdf', (err) => {
-        if (err) console.error("Download error:", err);
-        // **REMOVE THE FOLLOWING CLEANUP BLOCK IF YOU WANT TO KEEP THE FILES:**
-        // if (fs.existsSync(pdfPath)) {
-        //   fs.unlinkSync(pdfPath);
-        // }
+      // Draw a horizontal line
+      doc.moveTo(50, doc.y)
+          .lineTo(doc.page.width - 50, doc.y)
+          .stroke()
+          .moveDown(1);
+
+
+      // Patient information section
+      addHeading('Patient Information');
+
+      doc.fontSize(12)
+          .font('Helvetica')
+          .text(`Patient ID: ${patient.patient_id}`, 50, doc.y) // Position the text
+          .text(`Name: ${patient.name}`, 50, doc.y)
+          .text(`Email: ${patient.email}`, 50, doc.y)
+          .text(`Age: ${patient.age || 'Not provided'}`, 50, doc.y)
+          .text(`Sex: ${patient.sex || 'Not provided'}`, 50, doc.y)
+          .moveDown(1);
+
+      // Doctor information section
+      addHeading('Doctor Information');
+
+      doc.fontSize(12)
+          .font('Helvetica')
+          .text(`Doctor Name: ${doctor.name}`, 50, doc.y)
+          .text(`NMC ID: ${doctor.NMC_id}`, 50, doc.y)
+          .text(`Email: ${doctor.email}`, 50, doc.y)
+          .moveDown(1);
+
+      // Diagnosis results section
+      addHeading('Diagnosis Results');
+
+      doc.fontSize(12)
+          .font('Helvetica')
+          .text(`Diagnosis: ${final_result.label}`, 50, doc.y)
+          .text(`Confidence: ${(final_result.confidence * 100).toFixed(2)}%`, 50, doc.y)
+          .moveDown(0.5);
+
+      // Recommendations section
+      addHeading('Recommendations:');
+
+      doc.fontSize(12)
+          .font('Helvetica')
+          .text('1. Maintain good respiratory hygiene practices.', 50, doc.y)
+          .text('2. Schedule regular check-ups with your healthcare provider.', 50, doc.y)
+          .text('3. Report any new or worsening symptoms promptly.', 50, doc.y)
+          .moveDown(1);
+
+      // Specific recommendations based on the disease
+      if (final_result.label.toLowerCase().includes('pneumonia')) {
+          // Overwrite the default recommendations
+          doc.fontSize(12)
+              .font('Helvetica')
+              .text('1. Rest and adequate hydration are essential.', 50, doc.y)
+              .text('2. Follow the prescribed antibiotic regimen completely.', 50, doc.y)
+              .text('3. Schedule a follow-up X-ray to confirm resolution.', 50, doc.y)
+              .text('4. Consult with your doctor before resuming physical activities.', 50, doc.y)
+              .moveDown(1);
+      } else if (final_result.label.toLowerCase().includes('tuberculosis')) {
+          // Overwrite the default recommendations
+          doc.fontSize(12)
+              .font('Helvetica')
+              .text('1. Complete the full course of prescribed TB medications.', 50, doc.y)
+              .text('2. Attend all scheduled follow-up appointments.', 50, doc.y)
+              .text('3. Follow infection control measures to prevent transmission.', 50, doc.y)
+              .text('4. Report any adverse medication reactions to your healthcare provider.', 50, doc.y)
+              .moveDown(1);
+      }
+
+      // Disclaimer
+      doc.fontSize(10)
+          .font('Helvetica-Oblique')
+          .text('Disclaimer: This is an AI-assisted diagnosis and should be confirmed by a healthcare professional. ' +
+              'The results provided are not a substitute for professional medical advice, diagnosis, or treatment.', {
+              align: 'justify',
+              indent: 50
+          })
+          .moveDown(2);
+
+      // Footer with signature line
+      doc.fontSize(12)
+          .font('Helvetica')
+          .text('____________________________', { align: 'right' })
+          .moveDown(0.5)
+          .text(`Dr. ${doctor.name}`, { align: 'right' })
+          .moveDown(0.2)
+          .text(`NMC ID: ${doctor.NMC_id}`, { align: 'right' });
+
+      // Finalize the PDF
+      doc.end();
+
+      // Wait for PDF creation to complete
+      writeStream.on('finish', async () => {
+          try {
+              // Create a record in the ReportModel with more complete information
+              const newReport = await ReportModel.create({
+                  patient_id: patient.id,
+                  reportPath: reportFilename,   // Just the filename for storage efficiency
+                  diagnosis: final_result.label,
+
+              });
+
+              // Send the PDF as a response
+              res.setHeader('Content-Type', 'application/pdf');
+              res.setHeader('Content-Disposition', `inline; filename="${reportFilename}"`);
+
+              // Stream the file to the response
+              fs.createReadStream(reportPath).pipe(res);
+          } catch (err) {
+              console.error('Error saving report to database:', err);
+              res.status(500).json({ error: 'Failed to save report' });
+          }
       });
-    });
 
+      writeStream.on('error', (err) => {
+          console.error('Error creating PDF:', err);
+          res.status(500).json({ error: 'PDF generation failed' });
+      });
 
   } catch (err) {
-    console.error("❌ Report generation error:", err);
-    res.status(500).json({ error: "Internal server error", details: err.toString() });
+      console.error('Report generation error:', err);
+      res.status(500).json({ error: 'Report generation failed', details: err.toString() });
   }
 });
-
-// Enhanced endpoint to generate report with visualization
-app.post('/enhanced-report', async (req, res) => {
-    try {
-        const { id, NMC_id, imagePath } = req.body;
-        
-        if (!imagePath || !fs.existsSync(imagePath)) {
-            return res.status(400).json({ error: "Valid image path required" });
-        }
-        
-        // Generate Grad-CAM visualizations first
-        const visualResult = await runGradCAM(imagePath);
-        
-        // Combine with existing prediction result
-        final_result = {
-            ...final_result,
-            visualizations: visualResult.visualizations
-        };
-        
-        // Now generate the report with visualizations
-        // Forward to the report endpoint
-        req.body = { id, NMC_id };
-        app._router.handle(req, res, () => {});
-        
-    } catch (err) {
-        console.error("❌ Enhanced report generation error:", err);
-        res.status(500).json({ error: "Internal server error", details: err.toString() });
-    }
-});
-
+  
 // Database connection and server start
 sequelize.authenticate()
     .then(() => {

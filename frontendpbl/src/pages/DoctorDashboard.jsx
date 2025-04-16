@@ -23,10 +23,10 @@ const DoctorDashboard = () => {
 
   useEffect(() => {
     const dummyPatients = [
-      { _id: 13, name: 'Aarav Mehta', email: 'aarav@example.com' },
-      { _id: 14, name: 'Priya Sharma', email: 'priya@example.com' },
-      { _id: 16, name: 'Kabir Singh', email: 'kabir@example.com' },
-      { _id: 17, name: 'Sneha Reddy', email: 'sneha@example.com' },
+      { _id: 13, name: 'Akanksha Bhagwat', email: 'ab@gmail.com' },
+      { _id: 14, name: 'Ananya Kadam', email: 'a@gmail.com' },
+      { _id: 16, name: 'Neha Sawrikar', email: 'n@gmail.com' },
+      { _id: 17, name: 'Shilpa Bhagwat', email: 's@gmail.com' },
       { _id: 18, name: 'Rohan Patel', email: 'rohan@example.com' },
       { _id: 19, name: 'Ishita Das', email: 'ishita@example.com' },
       { _id: 20, name: 'Yash Joshi', email: 'yash@example.com' },
