@@ -22,49 +22,46 @@ const view = async (req, res) => {
             return res.status(404).json({ error: "Report not found" });
         }
 
-        // Get the stored path
-        const storedPath = viewreport.reportPath;
-        console.log("Stored PDF path:", storedPath);
+        // Get the stored path and normalize it
+        let storedPath = viewreport.reportPath;
+        console.log("Original stored path:", storedPath);
         
-        // Get current file's directory in ES modules
-        const currentFilePath = fileURLToPath(import.meta.url);
-        const currentDir = path.dirname(currentFilePath);
+        // Remove any leading 'reports/' or 'reports\' from the path
+        storedPath = storedPath.replace(/^reports[\/\\]/, '');
+        console.log("Normalized path:", storedPath);
+
+        // Construct the full reports directory path
+        const reportsDir = path.join(
+            'C:',
+            'Users',
+            'shilpa',
+            'OneDrive',
+            'Desktop',
+            'RespiraScan',
+            'RespiraScan',
+            'backendpbl',
+            'reports'
+        );
         
-        // Try multiple potential paths
-        const potentialPaths = [
-            storedPath,                                      // Original stored path
-            path.resolve(process.cwd(), storedPath),         // Relative to CWD
-            path.resolve(currentDir, '..', storedPath),      // One directory up from controller
-            path.resolve(currentDir, '..', '..', storedPath), // Two directories up
-            path.join(process.cwd(), storedPath) // Just use the filename
-        ];
+        // Construct the full path to the report
+        const reportPath = path.join(reportsDir, storedPath);
         
-        console.log("Checking these potential paths:");
-        potentialPaths.forEach(p => console.log("- " + p));
+        console.log("Looking for PDF at:", reportPath);
         
-        // Try each path
-        let foundPath = null;
-        for (const tryPath of potentialPaths) {
-            if (fs.existsSync(tryPath)) {
-                console.log("Found PDF at:", tryPath);
-                foundPath = tryPath;
-                break;
-            }
-        }
-        
-        if (!foundPath) {
-            console.error("PDF file not found in any of the tried locations");
+        if (!fs.existsSync(reportPath)) {
+            console.error("PDF file not found at expected location");
             return res.status(404).json({ 
                 error: "PDF file not found",
-                checkedPaths: potentialPaths 
+                expectedPath: reportPath
             });
         }
 
         // Set the Content-Type header to application/pdf
         res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${path.basename(storedPath)}"`);
 
         // Create a readable stream from the PDF file and pipe it to the response
-        const fileStream = fs.createReadStream(foundPath);
+        const fileStream = fs.createReadStream(reportPath);
         fileStream.pipe(res);
 
         // Handle errors during file streaming
@@ -76,7 +73,7 @@ const view = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error fetching report path:", error);
+        console.error("Error fetching report:", error);
         if (!res.headersSent) {
             res.status(500).json({ error: "Internal server error" });
         }
