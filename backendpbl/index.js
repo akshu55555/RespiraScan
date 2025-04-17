@@ -20,7 +20,8 @@ import loginpatient from './controllers/logincontrollerp.js';
 import previous from './controllers/previouscontroller.js';
 import view from './controllers/viewcontroller.js';
 import { ReportModel } from './db.js';
-
+import patient_view from './controllers/patientviewcontroller.js';
+import patient from './models/Patient.js';
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -168,61 +169,6 @@ function predictTuberculosisImage(imagePath) {
     });
 }
 
-// Function to run Grad-CAM visualization
-// function runGradCAM(imagePath) {
-//     return new Promise((resolve, reject) => {
-//         console.log(`Running Grad-CAM on: ${imagePath}`);
-
-//         // Check if file exists
-//         if (!fs.existsSync(imagePath)) {
-//             return reject(`File not found: ${imagePath}`);
-//         }
-
-//         const python = spawn('python', ['gradcam.py', imagePath]);
-
-//         let stdout = '';
-//         let stderr = '';
-
-//         python.stdout.on('data', (data) => {
-//             stdout += data.toString();
-//             console.log("Grad-CAM stdout:", data.toString().trim());
-//         });
-
-//         python.stderr.on('data', (data) => {
-//             stderr += data.toString();
-//             console.log("Grad-CAM stderr:", data.toString().trim());
-//         });
-
-//         python.on('close', (code) => {
-//             console.log(`Grad-CAM process exited with code ${code}`);
-
-//             if (code === 0) {
-//                 try {
-//                     // Give a moment for streams to finish
-//                     setTimeout(() => {
-//                         console.log("📦 Raw Grad-CAM stdout:", stdout.trim());
-
-//                         try {
-//                             const output = JSON.parse(stdout.trim());
-//                             resolve(output);
-//                         } catch (err) {
-//                             reject(`Failed to parse JSON: ${err.message}, Raw output: ${stdout.trim()}`);
-//                         }
-//                     }, 100);
-//                 } catch (err) {
-//                     reject(`Error in timeout handler: ${err.message}`);
-//                 }
-//             } else {
-//                 console.error(`Grad-CAM script failed with code ${code}`);
-//                 reject(`Grad-CAM script error: ${stderr}`);
-//             }
-//         });
-
-//         python.on('error', (err) => {
-//             reject(`Failed to start Grad-CAM process: ${err.message}`);
-//         });
-//     });
-// }
 
 // Routes
 app.get('/', (req, res) => res.status(200).json("HELLO"));
@@ -233,6 +179,7 @@ app.use('/logindoc', logindoc);
 app.use('/loginpatient', loginpatient);
 app.use('/previous-reports',previous);
 app.use('/view-report',view);
+app.use('/patient-view',patient_view);
 app.post("/logout", (req, res) => {
     res.clearCookie("token");
     res.json({ message: "Logged out" });
@@ -289,189 +236,6 @@ app.post('/tuberculosis', upload.single('image'), async (req, res) => {
     // Don't delete the file here since we'll need it for visualization
 });
 
-// Report generation route
-// app.post('/report', async (req, res) => {
-//     try {
-//       const { id: patientId, NMC_id: doctorNmcId } = req.body;
-      
-//       if (!patientId || !doctorNmcId) {
-//         return res.status(400).json({ error: "Patient ID and Doctor NMC ID are required" });
-//       }
-  
-//       // Fetch patient information
-//       const patient = await PatientModel.findOne({ where: { id: patientId } });
-//       if (!patient) {
-//         return res.status(404).json({ error: "Patient not found" });
-//       }
-  
-//       // Fetch doctor information
-//       const doctor = await DoctorModel.findOne({ where: { NMC_id: doctorNmcId } });
-//       if (!doctor) {
-//         return res.status(404).json({ error: "Doctor not found" });
-//       }
-//       console.log("patient",patient);
-//       console.log("doctor",doctor);
-//       // Use the final_result that was stored from prediction
-//       if (!final_result) {
-//         return res.status(400).json({ error: "No diagnosis result found. Please upload an image first." });
-//       }
-  
-//       // Generate a unique filename for the PDF
-//       const reportFilename = `RespiraScan_Report_${patientId}_${Date.now()}.pdf`;
-//       const reportPath = path.join('C:', 'Users', 'shilpa', 'OneDrive', 'Desktop', 'RespiraScan', 'RespiraScan', 'backendpbl', 'reports', reportFilename);
-//       // Create the PDF document
-//       const doc = new PDFDocument({ margin: 50 });
-      
-//       // Pipe the PDF to a writable stream
-//       const writeStream = fs.createWriteStream(reportPath);
-//       doc.pipe(writeStream);
-  
-//       // PDF content generation (same as before)
-//       doc.fontSize(25)
-//          .font('Helvetica-Bold')
-//          .text('RespiraScan Medical Report', { align: 'center' })
-//          .moveDown(1);
-  
-//       // Add current date
-//       const currentDate = new Date().toLocaleDateString('en-US', {
-//         year: 'numeric',
-//         month: 'long',
-//         day: 'numeric'
-//       });
-//       doc.fontSize(12)
-//          .font('Helvetica')
-//          .text(`Report Date: ${currentDate}`, { align: 'right' })
-//          .moveDown(1);
-  
-//       // Draw a horizontal line
-//       doc.moveTo(50, doc.y)
-//          .lineTo(doc.page.width - 50, doc.y)
-//          .stroke()
-//          .moveDown(1);
-  
-//       // Patient information section
-//       doc.fontSize(16)
-//          .font('Helvetica-Bold')
-//          .text('Patient Information')
-//          .moveDown(0.5);
-      
-//       doc.fontSize(12)
-//          .font('Helvetica')
-//          .text(`Patient ID: ${patient.patient_id}`)
-//          .text(`Name: ${patient.name}`)
-//          .text(`Email: ${patient.email}`)
-//          .text(`Age: ${patient.age || 'Not provided'}`)
-//          .text(`Sex: ${patient.sex || 'Not provided'}`)
-//          .moveDown(1);
-  
-//       // Doctor information section
-//       doc.fontSize(16)
-//          .font('Helvetica-Bold')
-//          .text('Doctor Information')
-//          .moveDown(0.5);
-      
-//       doc.fontSize(12)
-//          .font('Helvetica')
-//          .text(`Doctor Name: ${doctor.name}`)
-//          .text(`NMC ID: ${doctor.NMC_id}`)
-//          .text(`Email: ${doctor.email}`)
-//          .moveDown(1);
-  
-//       // Diagnosis results section
-//       doc.fontSize(16)
-//          .font('Helvetica-Bold')
-//          .text('Diagnosis Results')
-//          .moveDown(0.5);
-      
-//       doc.fontSize(12)
-//          .font('Helvetica')
-//          .text(`Diagnosis: ${final_result.label}`)
-//          .text(`Confidence: ${(final_result.confidence * 100).toFixed(2)}%`)
-//          .moveDown(0.5);
-  
-//       // Recommendations section
-//       doc.fontSize(14)
-//          .font('Helvetica-Bold')
-//          .text('Recommendations:')
-//          .moveDown(0.5);
-        
-//       doc.fontSize(12)
-//          .font('Helvetica');
-         
-//       // Specific recommendations based on the disease
-//       if (final_result.label.toLowerCase().includes('pneumonia')) {
-//         doc.text('1. Rest and adequate hydration are essential.')
-//            .text('2. Follow the prescribed antibiotic regimen completely.')
-//            .text('3. Schedule a follow-up X-ray to confirm resolution.')
-//            .text('4. Consult with your doctor before resuming physical activities.')
-//            .moveDown(1);
-//       } else if (final_result.label.toLowerCase().includes('tuberculosis')) {
-//         doc.text('1. Complete the full course of prescribed TB medications.')
-//            .text('2. Attend all scheduled follow-up appointments.')
-//            .text('3. Follow infection control measures to prevent transmission.')
-//            .text('4. Report any adverse medication reactions to your healthcare provider.')
-//            .moveDown(1);
-//       } else {
-//         doc.text('1. Maintain good respiratory hygiene practices.')
-//            .text('2. Schedule regular check-ups with your healthcare provider.')
-//            .text('3. Report any new or worsening symptoms promptly.')
-//            .moveDown(1);
-//       }
-  
-//       // Disclaimer
-//       doc.fontSize(10)
-//          .font('Helvetica-Oblique')
-//          .text('Disclaimer: This is an AI-assisted diagnosis and should be confirmed by a healthcare professional. ' +
-//                'The results provided are not a substitute for professional medical advice, diagnosis, or treatment.', {
-//            align: 'justify'
-//          })
-//          .moveDown(2);
-  
-//       // Footer with signature line
-//       doc.fontSize(12)
-//          .font('Helvetica')
-//          .text('____________________________', { align: 'right' })
-//          .moveDown(0.5)
-//          .text(`Dr. ${doctor.name}`, { align: 'right' })
-//          .moveDown(0.2)
-//          .text(`NMC ID: ${doctor.NMC_id}`, { align: 'right' });
-  
-//       // Finalize the PDF
-//       doc.end();
-  
-//       // Wait for PDF creation to complete
-//       writeStream.on('finish', async () => {
-//         try {
-//           // Create a record in the ReportModel with more complete information
-//           const newReport = await ReportModel.create({
-//             patient_id: patient.id,
-//             reportPath: reportFilename,  // Just the filename for storage efficiency
-//             diagnosis: final_result.label,
-            
-//           });
-  
-//           // Send the PDF as a response
-//           res.setHeader('Content-Type', 'application/pdf');
-//           res.setHeader('Content-Disposition', `inline; filename="${reportFilename}"`);
-          
-//           // Stream the file to the response
-//           fs.createReadStream(reportPath).pipe(res);
-//         } catch (err) {
-//           console.error('Error saving report to database:', err);
-//           res.status(500).json({ error: 'Failed to save report' });
-//         }
-//       });
-  
-//       writeStream.on('error', (err) => {
-//         console.error('Error creating PDF:', err);
-//         res.status(500).json({ error: 'PDF generation failed' });
-//       });
-  
-//     } catch (err) {
-//       console.error('Report generation error:', err);
-//       res.status(500).json({ error: 'Report generation failed', details: err.toString() });
-//     }
-//   });
 
 app.post('/report', async (req, res) => {
   try {

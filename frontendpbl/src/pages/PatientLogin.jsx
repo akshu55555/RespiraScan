@@ -25,6 +25,10 @@ const PatientLogin = () => {
         const data = await response.json();
         console.log("Login successful:", data);
         // Assuming the backend sets the token as a cookie
+        if (data.token) {
+          localStorage.setItem('patientToken', data.token);
+        }
+      
         navigate('/patient-dashboard'); // Redirect to patient dashboard
       } else if (response.status === 402) {
         const errorMessage = await response.text(); // Backend sends plain text error

@@ -7,6 +7,7 @@ import DoctorSignup from './pages/DoctorSignup.jsx'
 import PatientSignup from './pages/PatientSignup'
 import DoctorDashboard from './pages/DoctorDashboard' 
 import ReportHandler from './pages/ReportHandler.jsx'
+import PatientDashboard from './pages/PatientDashboard.jsx'
 
 function App() {
   const patientId=123;
@@ -20,7 +21,7 @@ function App() {
         <Route path="/doctor-signup" element={<DoctorSignup />} />
         <Route path="/patient-signup" element={<PatientSignup />} />
         <Route path="/doctor-dashboard" element={<DoctorDashboard />} /> 
-        <Route path="/reports" element={<ReportHandler patientId={patientId} />} /> 
+        <Route path="/patient-dashboard" element={<PatientDashboard />} />
       </Routes>
     </div>
   )
