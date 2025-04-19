@@ -8,7 +8,7 @@ const loginpatient=async(req,res)=>{
     const patient=await PatientModel.findOne({
             attributes:["email","pass"],
             where:{
-                email:req.body.email,
+                email:email,
             }
     })
     
@@ -18,13 +18,14 @@ const loginpatient=async(req,res)=>{
     let token;
     try{
 
-        token=jwt.sign({email:patient.email, password:patient.pass},
+        token = jwt.sign(
+            { email: patient.email, password: patient.pass },
             "your_secret_key",
-            {expiresIn:"1hr"}
-        )
-        res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "Strict" });
+            { expiresIn: "24h" } 
+          );
+       
         console.log("login successful");
-        res.json({ message: "Login successful" });
+        res.status(200).json({ message: "Login successful",token:token });
 
     }catch(err){
         res.status(402).json("error generating token!")

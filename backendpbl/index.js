@@ -21,7 +21,7 @@ import previous from './controllers/previouscontroller.js';
 import view from './controllers/viewcontroller.js';
 import { ReportModel } from './db.js';
 import patient_view from './controllers/patientviewcontroller.js';
-import patient from './models/Patient.js';
+
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
