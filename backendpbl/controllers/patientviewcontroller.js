@@ -2,9 +2,10 @@ import { PatientModel } from "../db.js";
 import jwt from 'jsonwebtoken';
 
 const patient_view = async (req, res) => {
+  
   console.log("Patient view endpoint called");
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = authHeader.split(' ')[1];
  
     try {
     const payload = jwt.verify(token, "your_secret_key");
@@ -17,6 +18,7 @@ const patient_view = async (req, res) => {
         email: email
       }
     });
+    console.log("getpatient",getpatient);
     
     if (!getpatient) {
       console.log("Patient not found for email:", email);

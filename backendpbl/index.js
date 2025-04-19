@@ -181,8 +181,8 @@ app.use('/previous-reports',previous);
 app.use('/view-report',view);
 app.use('/patient-view',patient_view);
 app.post("/logout", (req, res) => {
-    res.clearCookie("token");
-    res.json({ message: "Logged out" });
+    console.log("User logged out successfully");
+    res.status(200).json({ message: "Logged out" });
 });
 
 // Upload + Predict route for pneumonia

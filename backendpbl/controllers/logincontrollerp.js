@@ -11,7 +11,10 @@ const loginpatient=async(req,res)=>{
                 email:email,
             }
     })
-    
+    if(!patient){
+        console.log("Error retrieving patient");
+        return res.status(401).json("patient not found");
+    }
     if(pass!=patient.pass){
         return res.status(402).json("password is incorrect");
     }
@@ -25,7 +28,7 @@ const loginpatient=async(req,res)=>{
           );
        
         console.log("login successful");
-        res.status(200).json({ message: "Login successful",token:token });
+        return res.status(200).json({ message: "Login successful",token:token });
 
     }catch(err){
         res.status(402).json("error generating token!")

@@ -24,14 +24,17 @@ const PatientLogin = () => {
       if (response.ok) {
         const data = await response.json();
         console.log("Login successful:", data);
-        // Assuming the backend sets the token as a cookie
+        
         if (data.token) {
-          localStorage.setItem('patientToken', data.token);
+          await new Promise((resolve) => {
+            localStorage.setItem('patientToken', data.token);
+            resolve();
+          });
         }
       
         navigate('/patient-dashboard'); // Redirect to patient dashboard
       } else if (response.status === 402) {
-        const errorMessage = await response.text(); // Backend sends plain text error
+        const errorMessage = await response.json(); // Backend sends plain text error
         setError(errorMessage);
       } else {
         setError('Login failed. Please check your credentials.');

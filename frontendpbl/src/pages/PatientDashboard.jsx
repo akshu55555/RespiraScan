@@ -14,7 +14,7 @@ const PatientDashboard = () => {
 
     const fetchPatientData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('patientToken');
         
         // Redirect to login if no token found
         if (!token) {
@@ -84,22 +84,44 @@ const PatientDashboard = () => {
     };
   }, [navigate]);
 
+  // const handleLogout = async () => {
+  //   try {
+  //     await fetch('http://localhost:5000/logout', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         Authorization: `Bearer ${localStorage.getItem('token')}`
+  //       }
+  //     });
+  //     localStorage.removeItem('token'); // Clear token from storage
+  //     navigate('/login'); // Redirect to login page
+  //   } catch (err) {
+  //     console.error('Logout error:', err);
+  //   }
+  // };
   const handleLogout = async () => {
     try {
+      // Use the same token key as used elsewhere
+      const token = localStorage.getItem('patientToken');
+      
       await fetch('http://localhost:5000/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${token}`
         }
       });
-      localStorage.removeItem('token'); // Clear token from storage
-      navigate('/login'); // Redirect to login page
+      
+      localStorage.removeItem('patientToken');
+      navigate('/patient-login');
+      
     } catch (err) {
       console.error('Logout error:', err);
+      // Even if the server logout fails, clear the local token
+      localStorage.removeItem('patientToken');
+      navigate('/patient-login');
     }
   };
-
   const handleChangeDoctor = async (e) => {
     e.preventDefault();
     try {
