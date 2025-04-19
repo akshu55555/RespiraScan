@@ -125,8 +125,8 @@ const PatientDashboard = () => {
   const handleChangeDoctor = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/change-doctor', {
+      const token = localStorage.getItem('patientToken');
+      const response = await fetch('http://localhost:5000/changedoc', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

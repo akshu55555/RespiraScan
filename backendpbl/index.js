@@ -21,6 +21,7 @@ import previous from './controllers/previouscontroller.js';
 import view from './controllers/viewcontroller.js';
 import { ReportModel } from './db.js';
 import patient_view from './controllers/patientviewcontroller.js';
+import change from './controllers/changedoctorcontroller.js';
 
 dotenv.config();
 const app = express();
@@ -180,6 +181,7 @@ app.use('/loginpatient', loginpatient);
 app.use('/previous-reports',previous);
 app.use('/view-report',view);
 app.use('/patient-view',patient_view);
+app.use('/changedoc',change);
 app.post("/logout", (req, res) => {
     console.log("User logged out successfully");
     res.status(200).json({ message: "Logged out" });
