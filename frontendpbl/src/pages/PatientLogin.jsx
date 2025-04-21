@@ -96,7 +96,7 @@ const PatientLogin = () => {
             type="submit"
             className="w-full bg-[#0A66C2] text-white py-2 px-4 rounded-md hover:bg-[#084A9B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0A66C2]"
           >
-            Submit
+            LogIn
           </button>
         </form>
 
