@@ -336,7 +336,7 @@ app.post('/report', async (req, res) => {
 
       doc.fontSize(12)
           .font('Helvetica')
-          .text(`Patient ID: ${patient.patient_id}`, 50, doc.y) // Position the text
+          .text(`Patient ID: ${patient.id}`, 50, doc.y) // Position the text
           .text(`Name: ${patient.name}`, 50, doc.y)
           .text(`Email: ${patient.email}`, 50, doc.y)
           .text(`Age: ${patient.age || 'Not provided'}`, 50, doc.y)

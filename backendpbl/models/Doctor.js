@@ -34,7 +34,7 @@ const doctor=(sequelize)=>{
                 defaultValue: [] 
             }
      } ,{ 
-        timestamps: true  // ✅ Ensure this line is present
+        timestamps: true  //  Ensure this line is present
       })
 }
 export default doctor;
